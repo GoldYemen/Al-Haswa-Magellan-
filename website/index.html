@@ -1,784 +1,521 @@
 <!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- Google Search Console: إثبات ملكية الموقع -->  <meta name="google-site-verification" content="7exV7wdn-ulQeHa87xqW_RBYg_JVQwBylBGjKTUdOtQ">  <meta name="description" content="الحسوة ماجلان AlHaswa Magellan - دليلك للملاحة واستكشاف البر والبحر. تطبيق عربي للخرائط والملاحة والمد والجزر وأطوار القمر والبوصلة وأوقات الأذان في عدن وخليج عدن واليمن.">
-  <meta name="theme-color" content="#0A1628">  <meta property="og:title" content="الحسوة ماجلان | AlHaswa Magellan">
-  <meta property="og:description" content="دليلك للملاحة واستكشاف البر والبحر">
-  <meta property="og:image" content="https://github.com/user-attachments/assets/1660885e-d16c-43ff-943b-c9266db5246b">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://al-haswa-magellan-website.vercel.app/">  <title>الحسوة ماجلان | AlHaswa Magellan</title>  <style>
-    :root {
-      --bg: #0A1628;
-      --bg2: #0d1c31;
-      --card: #12243b;
-      --gold: #FFD700;
-      --text: #f5f7fb;
-      --muted: #bac7d8;
-      --border: rgba(255, 215, 0, 0.24);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: Tahoma, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.9;
-    }
-
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    img {
-      max-width: 100%;
-    }
-
-    .container {
-      width: min(1100px, 92%);
-      margin: auto;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: rgba(10, 22, 40, 0.97);
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(12px);
-    }
-
-    .nav {
-      min-height: 70px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 15px;
-      flex-wrap: wrap;
-      padding: 10px 0;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--gold);
-      font-weight: bold;
-      font-size: 19px;
-    }
-
-    .brand img {
-      width: 42px;
-      height: 42px;
-      object-fit: contain;
-      border-radius: 9px;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 17px;
-      flex-wrap: wrap;
-      font-size: 14px;
-    }
-
-    .nav-links a:hover {
-      color: var(--gold);
-    }
-
-    .nav-download {
-      padding: 7px 14px;
-      border: 1px solid var(--gold);
-      border-radius: 9px;
-      color: var(--gold);
-    }
-
-    .hero {
-      text-align: center;
-      padding: 60px 0 65px;
-      background: radial-gradient(ellipse at top, #1b3556 0%, transparent 70%);
-    }
-
-    .hero-logo {
-      width: 160px;
-      height: 160px;
-      object-fit: contain;
-      border-radius: 28px;
-      border: 2px solid var(--gold);
-      margin-bottom: 18px;
-      box-shadow: 0 0 40px rgba(255, 215, 0, 0.13);
-    }
-
-    h1 {
-      color: var(--gold);
-      font-size: clamp(32px, 6vw, 48px);
-      line-height: 1.5;
-    }
-
-    .english-title {
-      color: var(--text);
-      font-size: clamp(20px, 4vw, 27px);
-      margin-bottom: 8px;
-      direction: ltr;
-    }
-
-    .tagline {
-      color: var(--muted);
-      font-size: 19px;
-      margin-top: 8px;
-    }
-
-    .hero-description {
-      max-width: 780px;
-      margin: 15px auto 0;
-      color: var(--muted);
-    }
-
-    .buttons {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 25px;
-    }
-
-    .button {
-      display: inline-block;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-weight: bold;
-      transition: transform 0.2s, opacity 0.2s;
-    }
-
-    .button:hover {
-      transform: translateY(-2px);
-      opacity: 0.9;
-    }
-
-    .button-primary {
-      background: var(--gold);
-      color: #0A1628;
-    }
-
-    .button-secondary {
-      color: var(--gold);
-      border: 1px solid var(--gold);
-    }
-
-    section {
-      padding: 48px 0;
-    }
-
-    .section-title {
-      color: var(--gold);
-      font-size: 29px;
-      text-align: center;
-      margin-bottom: 10px;
-    }
-
-    .section-description {
-      color: var(--muted);
-      text-align: center;
-      max-width: 780px;
-      margin: 0 auto 30px;
-    }
-
-    .about {
-      background: var(--bg2);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .about-box {
-      max-width: 900px;
-      margin: auto;
-      text-align: center;
-      color: var(--muted);
-      font-size: 16px;
-    }
-
-    .features {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(235px, 1fr));
-      gap: 20px;
-    }
-
-    .feature {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 15px;
-      overflow: hidden;
-      transition: transform 0.2s, border-color 0.2s;
-    }
-
-    .feature:hover {
-      transform: translateY(-3px);
-      border-color: var(--gold);
-    }
-
-    .feature-content {
-      padding: 20px;
-    }
-
-    .feature-icon {
-      font-size: 31px;
-      margin-bottom: 7px;
-    }
-
-    .feature h3 {
-      color: var(--gold);
-      font-size: 19px;
-      margin-bottom: 8px;
-    }
-
-    .feature p {
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .feature-image {
-      display: block;
-      width: 100%;
-      height: auto;
-      background: #0b1524;
-      border-top: 1px solid var(--border);
-    }
-
-    .gallery {
-      background: var(--bg2);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .screenshots {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      align-items: start;
-    }
-
-    .screenshot {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 15px;
-      overflow: hidden;
-    }
-
-    .screenshot img {
-      display: block;
-      width: 100%;
-      height: auto;
-      background: #0b1524;
-    }
-
-    .screenshot figcaption {
-      padding: 12px;
-      color: var(--muted);
-      text-align: center;
-      font-size: 14px;
-    }
-
-    .vision-box {
-      max-width: 850px;
-      margin: auto;
-      padding: 28px;
-      text-align: center;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-    }
-
-    .vision-box p {
-      color: var(--muted);
-    }
-
-    .developer {
-      text-align: center;
-      background: var(--bg2);
-      border-top: 1px solid var(--border);
-    }
-
-    .developer-name {
-      color: var(--gold);
-      font-size: 21px;
-      font-weight: bold;
-      margin-top: 8px;
-    }
-
-    .development-text {
-      color: var(--muted);
-      max-width: 800px;
-      margin: 10px auto 0;
-    }
-
-    .legal-box {
-      max-width: 850px;
-      margin: auto;
-      padding: 22px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      text-align: center;
-    }
-
-    .legal-box p {
-      color: var(--muted);
-    }
-
-    .download-section {
-      background: radial-gradient(ellipse at center, #17304d 0%, var(--bg) 75%);
-    }
-
-    .download-box {
-      max-width: 850px;
-      margin: auto;
-      padding: 35px 20px;
-      text-align: center;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-    }
-
-    .download-box p {
-      color: var(--muted);
-      margin: 12px auto 20px;
-    }
-
-    footer {
-      padding: 26px 0;
-      border-top: 1px solid var(--border);
-      text-align: center;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    footer strong {
-      color: var(--gold);
-    }
-
-    .footer-links {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 18px;
-      margin-top: 12px;
-    }
-
-    .footer-links a {
-      color: var(--gold);
-    }
-
-    @media (max-width: 600px) {
-      .hero {
-        padding: 42px 0 48px;
-      }
-
-      .hero-logo {
-        width: 135px;
-        height: 135px;
-      }
-
-      .tagline {
-        font-size: 17px;
-      }
-
-      .nav {
-        justify-content: center;
-      }
-
-      .nav-links {
-        justify-content: center;
-      }
-
-      .section-title {
-        font-size: 25px;
-      }
-
-      .button {
-        width: 100%;
-        max-width: 320px;
-      }
-
-      .screenshots {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .screenshot figcaption {
-        font-size: 12px;
-        padding: 8px;
-      }
-    }
-  </style></head><body>  <header>
-    <div class="container nav">  <a class="brand" href="#home">
-    <img
-      src="https://github.com/user-attachments/assets/1660885e-d16c-43ff-943b-c9266db5246b"
-      alt="شعار الحسوة ماجلان">
-    <span>الحسوة ماجلان</span>
-  </a>
-
-  <nav class="nav-links" aria-label="القائمة الرئيسية">
-    <a href="#about">نبذة</a>
-    <a href="#features">المميزات</a>
-    <a href="#vision">رؤية المشروع</a>
-    <a class="nav-download" href="#download">تحميل التطبيق</a>
-  </nav>
-
-</div>
-
-  </header>  <main><!-- مقدمة المشروع -->
-<section class="hero" id="home">
-  <div class="container">
-
-    <img
-      class="hero-logo"
-      src="https://github.com/user-attachments/assets/1660885e-d16c-43ff-943b-c9266db5246b"
-      alt="أيقونة تطبيق الحسوة ماجلان"
-      width="192"
-      height="192">
-
-    <h1>الحسوة ماجلان</h1>
-    <h2 class="english-title">AlHaswa Magellan</h2>
-
-    <p class="tagline">دليلك للملاحة واستكشاف البر والبحر</p>
-
-    <p class="hero-description">
-      تطبيق عربي للملاحة والاستكشاف، يجمع أدوات الخرائط والمواقع
-      والمعلومات البحرية والفلكية، مع التركيز على عدن وخليج عدن واليمن.
-    </p>
-
-    <div class="buttons">
-      <a
-        class="button button-primary"
-        href="https://github.com/GoldYemen/Al-Haswa-Magellan-/releases/latest/download/default.apk">
-        ⬇ تحميل التطبيق APK
-      </a>
-
-      <a
-        class="button button-secondary"
-        href="https://github.com/GoldYemen/Al-Haswa-Magellan-">
-        مستودع المشروع
-      </a>
-    </div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0A1628"><meta name="google-site-verification" content="7exV7wdn-ulQeHa87xqW_RBYg_JVQwBylBGjKTUdOtQ"><title>الحسوة ماجلان | AlHaswa Magellan</title><meta name="description" content="حمّل الحسوة ماجلان، تطبيق الملاحة واستكشاف البر والبحر. اكتشف الخرائط دون اتصال، والمد والجزر، وأطوار القمر، والبوصلة ومواقيت الأذان في اليمن وخليج عدن."><meta name="keywords" content="الحسوة ماجلان, AlHaswa Magellan, تطبيق الحسوة, خرائط اليمن, ملاحة, عدن, خليج عدن, المد والجزر"><meta property="og:title" content="الحسوة ماجلان - دليلك للملاحة والاستكشاف">
+<meta property="og:description" content="استكشف البر والبحر مع الحسوة ماجلان. تعرّف على المميزات وحمّل التطبيق.">
+<meta property="og:image" content="https://github.com/user-attachments/assets/1660885e-d16c-43ff-943b-c9266db5246b">
+<meta property="og:type" content="website"><style>
+:root {
+  --bg: #07111f;
+  --panel: #101f33;
+  --gold: #ffd700;
+  --text: #f4f7fb;
+  --muted: #b5c1d1;
+  --border: #263a53;
+}
+
+* {
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: Tahoma, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.9;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.container {
+  width: min(1100px, 92%);
+  margin: auto;
+}
+
+header {
+  border-bottom: 1px solid var(--border);
+  background: rgba(7, 17, 31, .96);
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.brand img {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  object-fit: cover;
+}
+
+.nav a {
+  color: var(--gold);
+  font-size: 14px;
+}
+
+.hero {
+  padding: 65px 0 55px;
+  text-align: center;
+  background:
+    radial-gradient(ellipse at top, #193452 0%, var(--bg) 65%);
+}
+
+.app-icon {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 30px;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 35px #ffd70020;
+}
+
+h1 {
+  color: var(--gold);
+  font-size: clamp(32px, 6vw, 50px);
+  margin: 15px 0 0;
+  line-height: 1.5;
+}
+
+.english {
+  direction: ltr;
+  color: var(--muted);
+  font-size: 20px;
+  margin: 0;
+}
+
+.tagline {
+  font-size: 19px;
+  margin: 14px 0 25px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin: 25px 0;
+}
+
+.btn {
+  display: inline-block;
+  padding: 12px 25px;
+  border-radius: 10px;
+  font-weight: bold;
+  transition: .2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.primary {
+  background: var(--gold);
+  color: #111a28;
+}
+
+.secondary {
+  border: 1px solid var(--gold);
+  color: var(--gold);
+}
+
+.note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+section {
+  padding: 42px 0;
+}
+
+.section-title {
+  text-align: center;
+  color: var(--gold);
+  font-size: 28px;
+  margin: 0 0 10px;
+}
+
+.section-intro {
+  text-align: center;
+  color: var(--muted);
+  max-width: 700px;
+  margin: 0 auto 30px;
+}
+
+.about {
+  background: #0b192a;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 15px;
+  padding: 22px;
+  text-align: center;
+}
+
+.card .icon {
+  font-size: 34px;
+}
+
+.card h3 {
+  color: var(--gold);
+  margin: 8px 0;
+  font-size: 19px;
+}
+
+.card p {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+  margin-top: 30px;
+}
+
+.shot {
+  margin: 0;
+  text-align: center;
+}
+
+.shot img {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  margin: auto;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--panel);
+}
+
+.shot figcaption {
+  color: var(--gold);
+  padding: 12px 4px;
+  font-weight: bold;
+}
+
+.download {
+  text-align: center;
+  background: linear-gradient(180deg, #10233a, #07111f);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.download-box {
+  max-width: 720px;
+  margin: auto;
+  padding: 25px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel);
+}
+
+.download-box p {
+  color: var(--muted);
+}
+
+.developer {
+  text-align: center;
+  color: var(--muted);
+}
+
+.developer strong {
+  color: var(--gold);
+}
+
+footer {
+  text-align: center;
+  padding: 24px 12px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+footer a {
+  color: var(--gold);
+}
+
+@media (max-width: 700px) {
+  .features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gallery figure:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .gallery figure:last-child img {
+    max-width: 240px;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .features,
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery figure:last-child {
+    grid-column: auto;
+  }
+}
+</style></head><body><header>
+  <div class="container nav">
+    <div class="brand">
+      <img
+        src="https://github.com/user-attachments/assets/1660885e-d16c-43ff-943b-c9266db5246b"
+        alt="شعار الحسوة ماجلان">
+      <span>الحسوة ماجلان</span>
+    </div><a href="#download">تحميل التطبيق ↓</a>
 
   </div>
-</section>
+</header><main>  <section class="hero">
+    <div class="container">  <img
+    class="app-icon"
+    src="https://github.com/user-attachments/assets/1660885e-d16c-43ff-943b-c9266db5246b"
+    alt="أيقونة تطبيق الحسوة ماجلان">
 
-<!-- نبذة عن المشروع -->
-<section class="about" id="about">
-  <div class="container">
+  <h1>الحسوة ماجلان</h1>
+  <p class="english">AlHaswa Magellan</p>
 
-    <h2 class="section-title">🌍 نبذة عن المشروع</h2>
-
-    <div class="about-box">
-      الحسوة ماجلان تطبيق للملاحة والاستكشاف، يهدف إلى توفير تجربة عربية
-      حديثة لاستكشاف الخرائط والمواقع، مع أدوات للمعلومات البحرية والفلكية،
-      والتركيز على عدن وخليج عدن واليمن.
-    </div>
-
-  </div>
-</section>
-
-<!-- المميزات -->
-<section id="features">
-  <div class="container">
-
-    <h2 class="section-title">✨ المميزات</h2>
-
-    <p class="section-description">
-      تعرّف على أدوات تطبيق الحسوة ماجلان من خلال الصور والمعلومات التالية.
-    </p>
-
-    <div class="features">
-
-      <article class="feature">
-        <div class="feature-content">
-          <div class="feature-icon">🌐</div>
-          <h3>واجهة عربية</h3>
-          <p>تجربة استخدام واضحة ومناسبة للمستخدم العربي.</p>
-        </div>
-
-        <img
-          class="feature-image"
-          src="https://github.com/user-attachments/assets/2164a872-8ee8-43e1-9391-2a9c4c0116a9"
-          alt="واجهة تطبيق الحسوة ماجلان باللغة العربية"
-          width="1080"
-          height="2400"
-          loading="lazy">
-      </article>
-
-      <article class="feature">
-        <div class="feature-content">
-          <div class="feature-icon">🗺️</div>
-          <h3>الخرائط والملاحة</h3>
-          <p>استكشاف الخرائط والبحث عن الأماكن والتنقل بين المواقع.</p>
-        </div>
-
-        <img
-          class="feature-image"
-          src="https://github.com/user-attachments/assets/13a6af84-6ffc-4338-9411-eb6ecff9b9aa"
-          alt="الخرائط والملاحة في تطبيق الحسوة ماجلان"
-          width="1080"
-          height="2400"
-          loading="lazy">
-      </article>
-
-      <article class="feature">
-        <div class="feature-content">
-          <div class="feature-icon">📡</div>
-          <h3>الخرائط دون اتصال</h3>
-          <p>استخدام الخرائط التي تم تنزيلها مسبقًا دون الحاجة إلى اتصال بالإنترنت.</p>
-        </div>
-
-        <img
-          class="feature-image"
-          src="https://github.com/user-attachments/assets/13a6af84-6ffc-4338-9411-eb6ecff9b9aa"
-          alt="عرض الخرائط في تطبيق الحسوة ماجلان"
-          width="1080"
-          height="2400"
-          loading="lazy">
-      </article>
-
-      <article class="feature">
-        <div class="feature-content">
-          <div class="feature-icon">🌊</div>
-          <h3>المد والجزر</h3>
-          <p>عرض توقعات المد والجزر ومواعيد ارتفاع وانخفاض مستوى البحر.</p>
-        </div>
-
-        <img
-          class="feature-image"
-          src="https://github.com/user-attachments/assets/333af538-7fe4-4448-a577-78389d1f4519"
-          alt="بطاقة المد والجزر في تطبيق الحسوة ماجلان"
-          width="1080"
-          height="2400"
-          loading="lazy">
-      </article>
-
-      <article class="feature">
-        <div class="feature-content">
-          <div class="feature-icon">🌙</div>
-          <h3>أطوار القمر</h3>
-          <p>عرض طور القمر وشكله ومعلوماته الفلكية.</p>
-        </div>
-
-        <img
-          class="feature-image"
-          src="https://github.com/user-attachments/assets/30ac9241-4b21-48cd-a235-5856f0efda0b"
-          alt="أطوار القمر في تطبيق الحسوة ماجلان"
-          width="1080"
-          height="2400"
-          loading="lazy">
-      </article>
-
-      <article class="feature">
-        <div class="feature-content">
-          <div class="feature-icon">🧭</div>
-          <h3>البوصلة والقبلة</h3>
-          <p>تحديد الاتجاهات والمساعدة في معرفة اتجاه القبلة.</p>
-        </div>
-
-        <img
-          class="feature-image"
-          src="https://github.com/user-attachments/assets/7c0108a3-539c-4f06-9a3f-d7da680721d2"
-          alt="البوصلة وأدوات الملاحة في التطبيق"
-          width="1080"
-          height="2400"
-          loading="lazy">
-      </article>
-
-      <article class="feature">
-        <div class="feature-content">
-          <div class="feature-icon">🕌</div>
-          <h3>مواقيت الأذان</h3>
-          <p>عرض أوقات الأذان وفقًا للموقع الجغرافي.</p>
-        </div>
-      </article>
-
-    </div>
-  </div>
-</section>
-
-<!-- معرض الصور -->
-<section class="gallery" id="gallery">
-  <div class="container">
-
-    <h2 class="section-title">📱 صور التطبيق</h2>
-
-    <p class="section-description">
-      لقطات من واجهة الحسوة ماجلان وأدوات الملاحة والمعلومات البحرية والفلكية.
-    </p>
-
-    <div class="screenshots">
-
-      <figure class="screenshot">
-        <img
-          src="https://github.com/user-attachments/assets/2164a872-8ee8-43e1-9391-2a9c4c0116a9"
-          alt="واجهة التطبيق"
-          width="1080"
-          height="2400"
-          loading="lazy">
-        <figcaption>واجهة التطبيق</figcaption>
-      </figure>
-
-      <figure class="screenshot">
-        <img
-          src="https://github.com/user-attachments/assets/13a6af84-6ffc-4338-9411-eb6ecff9b9aa"
-          alt="الخرائط والملاحة"
-          width="1080"
-          height="2400"
-          loading="lazy">
-        <figcaption>الخرائط والملاحة</figcaption>
-      </figure>
-
-      <figure class="screenshot">
-        <img
-          src="https://github.com/user-attachments/assets/333af538-7fe4-4448-a577-78389d1f4519"
-          alt="المد والجزر"
-          width="1080"
-          height="2400"
-          loading="lazy">
-        <figcaption>المد والجزر</figcaption>
-      </figure>
-
-      <figure class="screenshot">
-        <img
-          src="https://github.com/user-attachments/assets/30ac9241-4b21-48cd-a235-5856f0efda0b"
-          alt="أطوار القمر"
-          width="1080"
-          height="2400"
-          loading="lazy">
-        <figcaption>أطوار القمر</figcaption>
-      </figure>
-
-      <figure class="screenshot">
-        <img
-          src="https://github.com/user-attachments/assets/7c0108a3-539c-4f06-9a3f-d7da680721d2"
-          alt="البوصلة وأدوات الملاحة"
-          width="1080"
-          height="2400"
-          loading="lazy">
-        <figcaption>البوصلة وأدوات الملاحة</figcaption>
-      </figure>
-
-    </div>
-  </div>
-</section>
-
-<!-- رؤية المشروع -->
-<section id="vision">
-  <div class="container">
-
-    <div class="vision-box">
-      <h2 class="section-title">🎯 رؤية المشروع</h2>
-
-      <p>
-        تطوير تطبيق يجمع بين الملاحة البرية والبحرية والمعلومات الفلكية
-        في مكان واحد، مع التركيز على احتياجات المستخدمين في اليمن
-        وسواحل خليج عدن.
-      </p>
-    </div>
-
-  </div>
-</section>
-
-<!-- المطور والتطوير -->
-<section class="developer" id="developer">
-  <div class="container">
-
-    <h2 class="section-title">👨‍💻 المطوّر</h2>
-
-    <p>تم تصميم هذا التطبيق من قبل</p>
-    <p class="developer-name">أصيل صادق</p>
-
-    <h2 class="section-title" style="margin-top: 35px;">🛠️ التطوير</h2>
-
-    <p class="development-text">
-      يُطوَّر المشروع باستخدام تقنيات أندرويد، مع تخصيص الواجهة
-      وإضافة أدوات الملاحة والمعلومات البحرية والفلكية.
-    </p>
-
-  </div>
-</section>
-
-<!-- الإشعارات القانونية -->
-<section id="legal">
-  <div class="container">
-
-    <div class="legal-box">
-      <h2 class="section-title">📜 الإشعارات القانونية</h2>
-
-      <p>
-        تُحفظ إشعارات الترخيص والإسناد المطلوبة ضمن ملفات المشروع.
-      </p>
-    </div>
-
-  </div>
-</section>
-
-<!-- التنزيل -->
-<section class="download-section" id="download">
-  <div class="container">
-
-    <div class="download-box">
-
-      <h2 class="section-title">⬇ تحميل الحسوة ماجلان</h2>
-
-      <p>
-        حمّل أحدث إصدار متاح من تطبيق الحسوة ماجلان من صفحة إصدارات المشروع.
-      </p>
-
-      <div class="buttons">
-
-        <a
-          class="button button-primary"
-          href="https://github.com/GoldYemen/Al-Haswa-Magellan-/releases/latest/download/default.apk">
-          تنزيل التطبيق APK
-        </a>
-
-        <a
-          class="button button-secondary"
-          href="https://github.com/GoldYemen/Al-Haswa-Magellan-/releases">
-          جميع الإصدارات
-        </a>
-
-      </div>
-
-    </div>
-  </div>
-</section>
-
-  </main>  <footer>
-    <div class="container">  <p>
-    تم تصميم هذا التطبيق من قبل
-    <strong>أصيل صادق</strong>.
+  <p class="tagline">
+    دليلك للملاحة واستكشاف البر والبحر
   </p>
 
-  <p>الحسوة ماجلان — AlHaswa Magellan</p>
+  <p class="section-intro">
+    اكتشف الخرائط والمواقع وأدوات الملاحة والمعلومات البحرية والفلكية
+    في تجربة عربية، مع اهتمام خاص بعدن وخليج عدن واليمن.
+  </p>
 
-  <div class="footer-links">
-    <a href="https://github.com/GoldYemen/Al-Haswa-Magellan-">
-      مستودع المشروع على GitHub
+  <div class="buttons">
+    <a class="btn primary"
+       href="https://github.com/GoldYemen/Al-Haswa-Magellan-/releases/latest/download/default.apk">
+      ⬇ تحميل التطبيق APK
     </a>
 
-    <a href="https://github.com/GoldYemen/Al-Haswa-Magellan-/releases/latest/download/default.apk">
-      تنزيل التطبيق
+    <a class="btn secondary" href="#features">
+      اكتشف المميزات
     </a>
   </div>
 
-  <p style="margin-top: 15px;">© 2026 الحسوة ماجلان</p>
+  <p class="note">
+    التحميل من صفحة الإصدارات الرسمية على GitHub.
+  </p>
 
 </div>
 
-  </footer></body>
+  </section>  <section class="about">
+    <div class="container">  <h2 class="section-title">🌍 نبذة عن المشروع</h2>
+
+  <p class="section-intro">
+    الحسوة ماجلان تطبيق للملاحة والاستكشاف، يهدف إلى توفير تجربة عربية
+    حديثة لاستكشاف الخرائط والمواقع، مع أدوات للمعلومات البحرية والفلكية،
+    والتركيز على عدن وخليج عدن واليمن.
+  </p>
+
+</div>
+
+  </section>  <section id="features">
+    <div class="container">  <h2 class="section-title">✨ مميزات التطبيق</h2>
+
+  <p class="section-intro">
+    أدوات متنوعة للاستكشاف والملاحة في مكان واحد.
+  </p>
+
+  <div class="features">
+
+    <article class="card">
+      <div class="icon">🌐</div>
+      <h3>واجهة عربية</h3>
+      <p>تجربة استخدام واضحة ومناسبة للمستخدم العربي.</p>
+    </article>
+
+    <article class="card">
+      <div class="icon">🗺️</div>
+      <h3>الخرائط والملاحة</h3>
+      <p>استكشاف الخرائط والبحث عن الأماكن والتنقل بين المواقع.</p>
+    </article>
+
+    <article class="card">
+      <div class="icon">📡</div>
+      <h3>الخرائط دون اتصال</h3>
+      <p>استخدام الخرائط التي تم تنزيلها مسبقًا دون الحاجة إلى الإنترنت.</p>
+    </article>
+
+    <article class="card">
+      <div class="icon">🌊</div>
+      <h3>المد والجزر</h3>
+      <p>عرض توقعات المد والجزر ومواعيد ارتفاع وانخفاض مستوى البحر.</p>
+    </article>
+
+    <article class="card">
+      <div class="icon">🌙</div>
+      <h3>أطوار القمر</h3>
+      <p>التعرّف على طور القمر وشكله ومعلوماته الفلكية.</p>
+    </article>
+
+    <article class="card">
+      <div class="icon">🧭</div>
+      <h3>البوصلة والقبلة</h3>
+      <p>تحديد الاتجاهات والمساعدة في معرفة اتجاه القبلة.</p>
+    </article>
+
+    <article class="card">
+      <div class="icon">🕌</div>
+      <h3>مواقيت الأذان</h3>
+      <p>عرض أوقات الأذان وفقًا للموقع الجغرافي.</p>
+    </article>
+
+  </div>
+</div>
+
+  </section>  <section class="about">
+    <div class="container">  <h2 class="section-title">📱 صور من التطبيق</h2>
+
+  <p class="section-intro">
+    تعرّف على واجهة التطبيق وبعض أدواته.
+  </p>
+
+  <div class="gallery">
+
+    <figure class="shot">
+      <img
+        loading="lazy"
+        src="https://github.com/user-attachments/assets/2164a872-8ee8-43e1-9391-2a9c4c0116a9"
+        alt="واجهة تطبيق الحسوة ماجلان"
+        width="1080" height="2400">
+      <figcaption>الواجهة العربية</figcaption>
+    </figure>
+
+    <figure class="shot">
+      <img
+        loading="lazy"
+        src="https://github.com/user-attachments/assets/13a6af84-6ffc-4338-9411-eb6ecff9b9aa"
+        alt="الخرائط والملاحة"
+        width="1080" height="2400">
+      <figcaption>الخرائط والملاحة</figcaption>
+    </figure>
+
+    <figure class="shot">
+      <img
+        loading="lazy"
+        src="https://github.com/user-attachments/assets/333af538-7fe4-4448-a577-78389d1f4519"
+        alt="بطاقة المد والجزر"
+        width="1080" height="2400">
+      <figcaption>المد والجزر</figcaption>
+    </figure>
+
+    <figure class="shot">
+      <img
+        loading="lazy"
+        src="https://github.com/user-attachments/assets/30ac9241-4b21-48cd-a235-5856f0efda0b"
+        alt="أطوار القمر"
+        width="1080" height="2400">
+      <figcaption>أطوار القمر</figcaption>
+    </figure>
+
+    <figure class="shot">
+      <img
+        loading="lazy"
+        src="https://github.com/user-attachments/assets/7c0108a3-539c-4f06-9a3f-d7da680721d2"
+        alt="البوصلة ومواقيت الأذان"
+        width="1080" height="2400">
+      <figcaption>البوصلة ومواقيت الأذان</figcaption>
+    </figure>
+
+  </div>
+</div>
+
+  </section>  <section class="download" id="download">
+    <div class="container">  <div class="download-box">
+    <h2 class="section-title">⬇ حمّل الحسوة ماجلان</h2>
+
+    <p>
+      احصل على أحدث إصدار متاح من التطبيق عبر صفحة الإصدارات الرسمية.
+    </p>
+
+    <a class="btn primary"
+       href="https://github.com/GoldYemen/Al-Haswa-Magellan-/releases/latest/download/default.apk">
+      تحميل التطبيق الآن
+    </a>
+
+    <p class="note">
+      افتح صفحة الإصدار واختر ملف APK من قسم Assets.
+    </p>
+  </div>
+
+</div>
+
+  </section>  <section>
+    <div class="container developer">  <h2 class="section-title">🎯 رؤية المشروع</h2>
+
+  <p>
+    تطوير تطبيق يجمع بين الملاحة البرية والبحرية والمعلومات الفلكية
+    في مكان واحد، مع التركيز على احتياجات المستخدمين في اليمن
+    وسواحل خليج عدن.
+  </p>
+
+  <h2 class="section-title">👨‍💻 المطوّر</h2>
+
+  <p>
+    تم تصميم هذا التطبيق من قبل <strong>أصيل صادق</strong>.
+  </p>
+
+  <p>
+    يُطوَّر المشروع باستخدام تقنيات أندرويد، مع تخصيص الواجهة
+    وإضافة أدوات الملاحة والمعلومات البحرية والفلكية.
+  </p>
+
+</div>
+
+  </section></main><footer>
+  <p>الحسوة ماجلان | AlHaswa Magellan</p>
+  <p>تم تصميم هذا التطبيق من قبل أصيل صادق</p>
+  <p>
+    <a href="https://github.com/GoldYemen/Al-Haswa-Magellan-/releases/latest/download/default.apk">
+      تحميل التطبيق
+    </a>
+    |
+    <a href="https://github.com/GoldYemen/Al-Haswa-Magellan-">
+      مستودع المشروع
+    </a>
+  </p>
+</footer></body>
 </html>
