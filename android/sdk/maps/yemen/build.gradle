@@ -1,0 +1,17 @@
+plugins {
+  id 'com.android.library'
+}
+
+apply from: "${rootProject.rootDir}/groovy/common-config.gradle"
+apply from: "${rootProject.rootDir}/groovy/publishing.gradle"
+
+android {
+  namespace = 'app.organicmaps.sdk.maps.yemen'
+  // enableKotlin = true  // see app/build.gradle
+}
+
+Publish(project, [
+    'artifactId' : 'maps-yemen',
+    'name'       : 'Al-Haswa Magellan SDK. Yemen Map',
+    'description': 'A library that provides Yemen map for the Al-Haswa Magellan SDK'
+])

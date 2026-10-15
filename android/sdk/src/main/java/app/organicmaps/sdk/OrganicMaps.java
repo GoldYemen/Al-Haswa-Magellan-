@@ -184,6 +184,18 @@ public final class OrganicMaps implements DefaultLifecycleObserver
     Config.setStoragePath(writablePath);
     Config.setStatisticsEnabled(SharedPropertiesUtils.isStatisticsEnabled());
 
+    // Pre-load Yemen map from APK assets into the writable data directory.
+    // Country maps must reside under {writablePath}/{dataVersion}/ for the native core
+    // to discover them — unlike World.mwm, they are NOT read directly from the APK zip.
+    // This runs after nativeInitPlatform (so the platform is ready) but BEFORE
+    // nativeInitFramework, so the map is present when the Storage constructor scans
+    // local files via FindAllLocalMapsAndCleanup.
+    // NOTE: Do NOT call Framework.nativeGetDataVersion() here — g_framework is NULL
+    // before nativeInitFramework() and will crash the process (SIGSEGV).
+    // The data version is hardcoded in YemenMapPreloader from the bundled countries.json.
+    // On first launch the ~55 MB copy takes a few seconds; subsequent launches skip it.
+    YemenMapPreloader.preloadYemenMap(mContext, writablePath);
+
     mPlatformInitialized = true;
     Logger.i(TAG, "Platform initialized");
   }
