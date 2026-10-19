@@ -135,8 +135,8 @@ public class HawsaMoonActivity extends AppCompatActivity
     // Use correct MoonCalculator API
     double age = MoonCalculator.getLunarAge(timeMillis);
     double illum = MoonCalculator.getIllumination(timeMillis);
-    // Phase fraction: 0=new, 0.5=full, 1.0=new again
-    float phaseFraction = (float) (age / MoonCalculator.SYNODIC_MONTH);
+    // Phase fraction from true solar elongation: 0=new, 0.5=full, 1.0=new again
+    float phaseFraction = (float) MoonCalculator.getPhaseFraction(timeMillis);
 
     // Set phase into animated view
     if (moonPhaseView != null)
@@ -173,6 +173,26 @@ public class HawsaMoonActivity extends AppCompatActivity
     tvAge.setGravity(Gravity.CENTER);
     tvAge.setPadding(0, 0, 0, dp(12));
     infoCard.addView(tvAge);
+
+    // High-precision astronomical details (Meeus / ELP-2000 based)
+    MoonCalculator.MoonDetails details = MoonCalculator.getMoonDetails(timeMillis);
+
+    TextView tvDistance = new TextView(this);
+    tvDistance.setText(String.format(Locale.US, "المسافة عن الأرض: %,.0f كم", details.distanceKm));
+    tvDistance.setTextSize(14);
+    tvDistance.setTextColor(COLOR_TEXT_DIM);
+    tvDistance.setGravity(Gravity.CENTER);
+    tvDistance.setPadding(0, 0, 0, dp(2));
+    infoCard.addView(tvDistance);
+
+    TextView tvCoords = new TextView(this);
+    tvCoords.setText(String.format(Locale.US,
+        "المطلع المستقيم: %.2f°  |  الميل: %.2f°", details.ra, details.dec));
+    tvCoords.setTextSize(13);
+    tvCoords.setTextColor(COLOR_TEXT_DIM);
+    tvCoords.setGravity(Gravity.CENTER);
+    tvCoords.setPadding(0, 0, 0, dp(12));
+    infoCard.addView(tvCoords);
 
     // Separator
     infoCard.addView(createSeparator());
@@ -241,7 +261,7 @@ public class HawsaMoonActivity extends AppCompatActivity
     for (int i = 0; i < weekly.size() && i < 7; i++)
     {
       MoonCalculator.MoonDayInfo dayInfo = weekly.get(i);
-      float dayPhase = (float) (dayInfo.age / MoonCalculator.SYNODIC_MONTH);
+      float dayPhase = (float) dayInfo.phaseFraction;
       float dayIllum = (float) dayInfo.illumination;
       boolean isToday = (i == 0);
       weeklyStrip.addView(createRealisticDayMoonIcon(dayPhase, dayIllum, isToday));
