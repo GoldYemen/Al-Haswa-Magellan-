@@ -4,42 +4,26 @@
     android:height="72dp"
     android:viewportWidth="48"
     android:viewportHeight="48">
-
-    <!-- Outer circular frame -->
+    <!-- Stylized logo: mountain + river + pin -->
+    <!-- Mountain -->
     <path
-        android:fillColor="#00000000"
+        android:pathData="M6,32 L14,16 L22,32 Z"
+        android:fillColor="#D4AF37" />
+    <!-- Small mountain -->
+    <path
+        android:pathData="M16,32 L22,20 L28,32 Z"
+        android:fillColor="#C49B2F" />
+    <!-- River path -->
+    <path
+        android:pathData="M4,34 Q12,30 20,34 Q28,38 36,34 Q40,32 44,34"
         android:strokeColor="#D4AF37"
-        android:strokeWidth="1.8"
-        android:pathData="M24,6.5 A17.5,17.5 0 1,1 23.9,6.5" />
-
-    <!-- Small compass accent -->
-    <path
-        android:fillColor="#D4AF37"
-        android:pathData="M24,9.5 L25.8,18.2 L24,22.4 L22.2,18.2 Z" />
-
-    <!-- Stylized mountain -->
-    <path
-        android:fillColor="#D4AF37"
-        android:pathData="M9,31 L17,18 L24,27 L31,18 L39,31 Z" />
-
-    <!-- Lower water / river curve -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#4FC3F7"
-        android:strokeWidth="2.2"
-        android:strokeLineCap="round"
-        android:pathData="M7,34 Q14,29 17,32 Q22,36 24,33 Q28,29 31,32 Q36,36 41,34" />
-
+        android:strokeWidth="2"
+        android:fillColor="#00000000" />
     <!-- Location pin -->
     <path
-        android:fillColor="#E53935"
-        android:pathData="M31.5,13.2 C31.5,10.2 29.1,8 26.2,8 C23.3,8 20.9,10.2 20.9,13.2 C20.9,16.9 26.2,22.1 26.2,22.1 C26.2,22.1 31.5,16.9 31.5,13.2 Z" />
+        android:pathData="M36,12 C36,8 32,6 30,8 C28,10 28,14 30,16 L33,21 L36,16 C38,14 38,10 36,12 Z"
+        android:fillColor="#E53935" />
     <path
-        android:fillColor="#FFCDD2"
-        android:pathData="M26.2,11.2 C24.8,11.2 23.6,12.4 23.6,13.8 C23.6,15.2 24.8,16.4 26.2,16.4 C27.6,16.4 28.8,15.2 28.8,13.8 C28.8,12.4 27.6,11.2 26.2,11.2 Z" />
-
-    <!-- Small northern accent -->
-    <path
-        android:fillColor="#D4AF37"
-        android:pathData="M24,4.2 L25.2,6.8 L24,8.2 L22.8,6.8 Z" />
+        android:pathData="M33,11 C33,9.5 31.5,8.5 30.5,9.5 C29.5,10.5 29.5,12.5 30.5,13.5 L33,17 L33,13 C34,12 34,10 33,11 Z"
+        android:fillColor="#FF8A80" />
 </vector>
