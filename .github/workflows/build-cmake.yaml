@@ -161,9 +161,9 @@ jobs:
           cache: true
       - name: Set up MSVC environment (Windows)
         if: ${{ runner.os == 'Windows' }}
-        uses: ilammy/msvc-dev-cmd@v1
+        uses: step-security/msvc-dev-cmd@v1
       - name: Configure ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+        uses: hendrikmuhs/ccache-action@v1.2.24
         with:
           key: ${{ github.workflow }}-${{ matrix.environment.os }}-${{ matrix.environment.cc }}-${{ matrix.environment.unity }}-${{ matrix.cmake-build-type }}
           # No Unity compiles every TU separately, so its cache needs more room

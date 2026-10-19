@@ -251,7 +251,7 @@ jobs:
 
       - name: Upload universal APK to GitHub
         if: ${{ matrix.flavor == 'web' }}
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           body_path: ${{ runner.temp }}/release-notes.txt
           token: ${{ secrets.GITHUB_TOKEN }}
