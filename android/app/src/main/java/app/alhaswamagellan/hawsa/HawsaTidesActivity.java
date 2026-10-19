@@ -262,7 +262,7 @@ public class HawsaTidesActivity extends AppCompatActivity
       if (day.firstLow != null)
       {
         sb.append("  \u062C\u0632\u0631 \u0645\u0646\u062E\u0641\u0636: ")
-            .append(formatEventTime(day.firstLow)); // الجزر المنخفض:
+            .append(formatEventTime(day.firstLow)); // الجزر نازل:
         sb.append(" (").append(String.format(Locale.US, "%.1fm", day.firstLow.height)).append(")");
         if (day.secondLow != null)
         {
@@ -287,7 +287,6 @@ public class HawsaTidesActivity extends AppCompatActivity
     sb.append(
         "\u062A\u0645 \u062A\u0635\u0645\u064A\u0645 \u0647\u0630\u0627 \u0627\u0644\u062A\u0637\u0628\u064A\u0642 "
         + "\u0645\u0646 \u0642\u0628\u0644 \u0623\u0635\u064A\u0644 \u0635\u0627\u062F\u0642");
-    // تم تصميم هذا التطبيق من قبل أصيل صادق
 
     TextView summaryText = null;
     if (weeklyTidesContainer.getChildCount() > 0)
