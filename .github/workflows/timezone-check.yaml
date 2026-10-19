@@ -15,7 +15,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run timezone validator
         run: tools/python/timezone/timezone_info_validator.py
