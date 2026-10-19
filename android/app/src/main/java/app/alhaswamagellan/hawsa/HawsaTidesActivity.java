@@ -106,7 +106,7 @@ public class HawsaTidesActivity extends AppCompatActivity
     switch (status)
     {
     case "RISING":
-      statusText = "\u0645\u062F \u0635\u0627\u0639\u062F \u2191"; // مد صاعد ↑
+      statusText = "\u0645\u062F \u0635\u0627\u0639\u062F \u2191"; // مد مملي ↑
       textColor = 0xFF10B981; // green
       break;
     case "HIGH":
@@ -118,7 +118,7 @@ public class HawsaTidesActivity extends AppCompatActivity
       textColor = 0xFFEF4444; // red
       break;
     case "LOW":
-      statusText = "\u062C\u0632\u0631 \u0645\u0646\u062E\u0641\u0636 \u25CF"; // جزر منخفض ●
+      statusText = "\u062C\u0632\u0631 \u0645\u0646\u062E\u0641\u0636 \u25CF"; // جزر نازل ●
       textColor = 0xFFEF4444; // red
       break;
     default: statusText = ""; textColor = 0xFF64748B;
