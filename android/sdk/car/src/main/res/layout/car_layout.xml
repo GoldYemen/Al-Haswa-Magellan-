@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-  <app.organicmaps.sdk.MapView
+  <app.alhaswamagellan.sdk.MapView
       android:id="@+id/map_view"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
@@ -16,7 +16,7 @@
       android:layout_height="match_parent"
       android:layout_gravity="top|start">
 
-    <app.organicmaps.sdk.widgets.speedlimit.SpeedLimitView
+    <app.alhaswamagellan.sdk.widgets.speedlimit.SpeedLimitView
         android:id="@+id/speed_limit_view"
         style="@style/MwmWidget.SpeedLimit"
         android:layout_width="80dp"

@@ -6,6 +6,6 @@
 tools/osmctools/**
 xcode/**
 # A patched copy of the https://registry.khronos.org/OpenGL/api/GLES3/gl3.h
-android/sdk/src/main/cpp/app/organicmaps/sdk/opengl/gl3stub.h
+android/sdk/src/main/cpp/app/alhaswamagellan/sdk/opengl/gl3stub.h
 # Replaced by the private configuration at build time.
 private.h

@@ -26,7 +26,7 @@ ext.Publish = { Project project, Map<String, Object> props ->
 
   try {
     mavenPublishing {
-      coordinates('app.organicmaps.sdk', props['artifactId'], rootProject.ext.versionName)
+      coordinates('app.alhaswamagellan.sdk', props['artifactId'], rootProject.ext.versionName)
 
       // Sign only when a key is configured; local tasks (e.g. publishToMavenLocal) run without one.
       if (project.findProperty('signingInMemoryKey') != null) {

@@ -431,7 +431,7 @@ For each changed file, use `Read` to load full context — not just diff hunks:
 - **Header/implementation pairs:** For `.hpp` changes, also read the corresponding `.cpp`
   (and vice versa)
 - **JNI pairs:** For JNI `.java` changes, also read the matching native C++ file in
-  `android/sdk/src/main/cpp/app/organicmaps/sdk/`
+  `android/sdk/src/main/cpp/app/alhaswamagellan/sdk/`
 - **New files:** Read the entire file
 - **Deleted files:** Note what was removed but don't read deeply
 
@@ -687,8 +687,8 @@ Check against project requirements using `gh pr view <N> --json commits`:
 - String encoding (UTF-8 with `GetStringUTFChars`)
 - Method signature correctness
 - **Cross-file verification:** For each `native` method in `.java`, use `Grep` to find the
-  corresponding `JNIEXPORT` function (pattern: `Java_app_organicmaps_sdk_<ClassName>_<methodName>`)
-  in `android/sdk/src/main/cpp/app/organicmaps/sdk/`. Verify parameter types match
+  corresponding `JNIEXPORT` function (pattern: `Java_app_alhaswamagellan_sdk_<ClassName>_<methodName>`)
+  in `android/sdk/src/main/cpp/app/alhaswamagellan/sdk/`. Verify parameter types match
   (Java `String` -> C++ `jstring`, Java `long` -> `jlong`, etc.)
 
 ##### Android (if `android/` files changed)
@@ -1295,8 +1295,8 @@ When reviewing, consider:
 
 ### JNI Bridge
 
-- `android/sdk/src/main/java/app/organicmaps/sdk/Framework.java` - JNI Java side
-- `android/sdk/src/main/cpp/app/organicmaps/sdk/` - JNI C++ implementations
+- `android/sdk/src/main/java/app/alhaswamagellan/sdk/Framework.java` - JNI Java side
+- `android/sdk/src/main/cpp/app/alhaswamagellan/sdk/` - JNI C++ implementations
 
 ### iOS Core
 
@@ -1312,8 +1312,8 @@ When reviewing, consider:
 
 ### Android Core
 
-- `android/app/src/main/java/app/organicmaps/MwmApplication.java` - App entry
-- `android/app/src/main/java/app/organicmaps/MwmActivity.java` - Main activity
+- `android/app/src/main/java/app/alhaswamagellan/MwmApplication.java` - App entry
+- `android/app/src/main/java/app/alhaswamagellan/MwmActivity.java` - Main activity
 
 ## Example Output
 
@@ -1346,7 +1346,7 @@ simpler memory model, but requires full copy on modification.
 
 ### 🔴 Critical Issues
 
-- android/sdk/src/main/java/app/organicmaps/sdk/Framework.java:142
+- android/sdk/src/main/java/app/alhaswamagellan/sdk/Framework.java:142
   Potential null pointer: `result` not checked before use
 
 ### 🟠 Important Issues
@@ -1425,7 +1425,7 @@ simpler memory model, but requires full copy on modification.
 
 ### 🔴 Critical Issues
 
-- android/sdk/src/main/java/app/organicmaps/sdk/Framework.java:142
+- android/sdk/src/main/java/app/alhaswamagellan/sdk/Framework.java:142
   Potential null pointer: `result` not checked before use
 
 ### ✅ Quick Checks Passed

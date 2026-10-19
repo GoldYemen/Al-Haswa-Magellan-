@@ -87,7 +87,7 @@
 
     <!-- Allows for config and orientation change without killing/restarting main activity -->
     <activity
-      android:name="app.organicmaps.SplashActivity"
+      android:name="app.alhaswamagellan.SplashActivity"
       android:theme="@style/MwmTheme.Splash"
       android:configChanges="orientation|screenSize|smallestScreenSize|density|screenLayout|uiMode|keyboard|keyboardHidden|navigation"
       android:screenOrientation="fullUser"
@@ -416,22 +416,22 @@
     </activity>
 
     <activity
-        android:name="app.organicmaps.DownloadResourcesLegacyActivity"
+        android:name="app.alhaswamagellan.DownloadResourcesLegacyActivity"
         android:theme="@style/MwmTheme.DownloadResourcesLegacy"
         android:configChanges="orientation|screenLayout|screenSize"
         android:screenOrientation="fullUser"/>
 
     <activity-alias
-      android:name="app.organicmaps.DownloadResourcesActivity"
+      android:name="app.alhaswamagellan.DownloadResourcesActivity"
       android:label="@string/app_name"
-      android:targetActivity="app.organicmaps.SplashActivity"
+      android:targetActivity="app.alhaswamagellan.SplashActivity"
       android:exported="true">
       <!-- Launcher moved to HawsaMainActivity -->
     </activity-alias>
 
     <!-- ===== الحسوة ماجلان — الواجهة الرئيسية ===== -->
     <activity
-        android:name="app.organicmaps.hawsa.HawsaMainActivity"
+        android:name="app.alhaswamagellan.hawsa.HawsaMainActivity"
         android:theme="@style/MwmTheme"
         android:screenOrientation="portrait"
         android:exported="true">
@@ -442,25 +442,25 @@
     </activity>
 
     <activity
-        android:name="app.organicmaps.hawsa.HawsaTidesActivity"
+        android:name="app.alhaswamagellan.hawsa.HawsaTidesActivity"
         android:theme="@style/MwmTheme"
         android:screenOrientation="portrait"
-        android:parentActivityName="app.organicmaps.hawsa.HawsaMainActivity" />
+        android:parentActivityName="app.alhaswamagellan.hawsa.HawsaMainActivity" />
 
     <activity
-        android:name="app.organicmaps.hawsa.HawsaMoonActivity"
+        android:name="app.alhaswamagellan.hawsa.HawsaMoonActivity"
         android:theme="@style/MwmTheme"
         android:screenOrientation="portrait"
-        android:parentActivityName="app.organicmaps.hawsa.HawsaMainActivity" />
+        android:parentActivityName="app.alhaswamagellan.hawsa.HawsaMainActivity" />
 
     <activity
-        android:name="app.organicmaps.hawsa.HawsaCompassActivity"
+        android:name="app.alhaswamagellan.hawsa.HawsaCompassActivity"
         android:theme="@style/MwmTheme"
         android:screenOrientation="portrait"
-        android:parentActivityName="app.organicmaps.hawsa.HawsaMainActivity" />
+        android:parentActivityName="app.alhaswamagellan.hawsa.HawsaMainActivity" />
 
     <activity
-        android:name="app.organicmaps.MwmActivity"
+        android:name="app.alhaswamagellan.MwmActivity"
         android:theme="@style/MwmTheme.MainActivity"
         android:launchMode="singleTask"
         android:configChanges="uiMode"
@@ -473,89 +473,89 @@
         android:targetActivity=".SplashActivity" />
 
     <activity
-        android:name="app.organicmaps.downloader.DownloaderActivity"
+        android:name="app.alhaswamagellan.downloader.DownloaderActivity"
         android:enableOnBackInvokedCallback="true"
         android:configChanges="orientation|screenLayout|screenSize"
         android:screenOrientation="fullUser"
         android:label="@string/download_maps"
-        android:parentActivityName="app.organicmaps.MwmActivity"
+        android:parentActivityName="app.alhaswamagellan.MwmActivity"
         android:windowSoftInputMode="adjustResize" />
 
     <activity
-        android:name="app.organicmaps.settings.SettingsActivity"
+        android:name="app.alhaswamagellan.settings.SettingsActivity"
         android:configChanges="orientation|screenLayout|screenSize"
         android:screenOrientation="fullUser"
         android:label="@string/settings"
-        android:parentActivityName="app.organicmaps.MwmActivity" />
+        android:parentActivityName="app.alhaswamagellan.MwmActivity" />
 
     <activity
-        android:name="app.organicmaps.help.HelpActivity"
+        android:name="app.alhaswamagellan.help.HelpActivity"
         android:label="@string/about_menu_title"
-        android:parentActivityName="app.organicmaps.MwmActivity"
+        android:parentActivityName="app.alhaswamagellan.MwmActivity"
         android:exported="false">
       <intent-filter>
-        <action android:name="app.organicmaps.help.HelpActivity" />
+        <action android:name="app.alhaswamagellan.help.HelpActivity" />
         <category android:name="android.intent.category.DEFAULT" />
       </intent-filter>
     </activity>
 
     <activity
-        android:name="app.organicmaps.bookmarks.BookmarkCategoriesActivity"
+        android:name="app.alhaswamagellan.bookmarks.BookmarkCategoriesActivity"
         android:theme="@style/MwmTheme.CardBg"
         android:configChanges="orientation|screenLayout|screenSize"
         android:screenOrientation="fullUser"
         android:label="@string/bookmarks_and_tracks"
-        android:parentActivityName="app.organicmaps.MwmActivity"
+        android:parentActivityName="app.alhaswamagellan.MwmActivity"
         android:windowSoftInputMode="adjustResize" />
 
     <activity
-        android:name="app.organicmaps.bookmarks.BookmarkListActivity"
+        android:name="app.alhaswamagellan.bookmarks.BookmarkListActivity"
         android:theme="@style/MwmTheme.CardBg"
         android:configChanges="orientation|screenLayout|screenSize"
         android:screenOrientation="fullUser"
         android:label="@string/bookmarks"
-        android:parentActivityName="app.organicmaps.bookmarks.BookmarkCategoriesActivity"
+        android:parentActivityName="app.alhaswamagellan.bookmarks.BookmarkCategoriesActivity"
         android:windowSoftInputMode="adjustResize" />
 
     <activity
-        android:name="app.organicmaps.editor.EditorActivity"
+        android:name="app.alhaswamagellan.editor.EditorActivity"
         android:configChanges="orientation|screenLayout|screenSize"
         android:screenOrientation="fullUser"
         android:label="@string/edit_place"
-        android:parentActivityName="app.organicmaps.MwmActivity"
+        android:parentActivityName="app.alhaswamagellan.MwmActivity"
         android:windowSoftInputMode="adjustResize" />
 
     <activity
-        android:name="app.organicmaps.editor.ProfileActivity"
-        android:parentActivityName="app.organicmaps.settings.SettingsActivity" />
+        android:name="app.alhaswamagellan.editor.ProfileActivity"
+        android:parentActivityName="app.alhaswamagellan.settings.SettingsActivity" />
 
     <activity
-        android:name="app.organicmaps.editor.FeatureCategoryActivity"
-        android:parentActivityName="app.organicmaps.MwmActivity"
+        android:name="app.alhaswamagellan.editor.FeatureCategoryActivity"
+        android:parentActivityName="app.alhaswamagellan.MwmActivity"
         android:windowSoftInputMode="adjustResize" />
 
     <activity
-        android:name="app.organicmaps.editor.OsmLoginActivity"
-        android:parentActivityName="app.organicmaps.MwmActivity" />
+        android:name="app.alhaswamagellan.editor.OsmLoginActivity"
+        android:parentActivityName="app.alhaswamagellan.MwmActivity" />
 
     <!-- "adjustNothing" would leave WindowInsetsCompat reporting no Type.ime() below API 30, where
          the platform has no IME inset type; BookmarkCategorySettingsActivity swaps it from API 30 -->
     <activity
-      android:name="app.organicmaps.bookmarks.BookmarkCategorySettingsActivity"
+      android:name="app.alhaswamagellan.bookmarks.BookmarkCategorySettingsActivity"
       android:label="@string/edit"
       android:windowSoftInputMode="stateVisible|adjustResize"/>
     <activity
-      android:name="app.organicmaps.widget.placepage.WikiArticleActivity"
+      android:name="app.alhaswamagellan.widget.placepage.WikiArticleActivity"
       android:label="@string/place_description_title"/>
     <activity
-      android:name="app.organicmaps.settings.DrivingOptionsActivity"
+      android:name="app.alhaswamagellan.settings.DrivingOptionsActivity"
       android:label="@string/driving_options_title"/>
     <activity
-        android:name="app.organicmaps.MapPlaceholderActivity"/>
+        android:name="app.alhaswamagellan.MapPlaceholderActivity"/>
     <activity
-        android:name="app.organicmaps.car.screens.permissions.RequestPermissionsActivity"/>
+        android:name="app.alhaswamagellan.car.screens.permissions.RequestPermissionsActivity"/>
     <service
-        android:name="app.organicmaps.car.AndroidAutoService"
+        android:name="app.alhaswamagellan.car.AndroidAutoService"
         android:exported="true"
         tools:ignore="ExportedService">
       <intent-filter>

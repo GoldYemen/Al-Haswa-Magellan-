@@ -34,7 +34,7 @@
     </FrameLayout>
 
     <!-- Tab switcher: Grid | Spectrum | Sliders -->
-    <app.organicmaps.widget.colorpicker.PillSegmentedControl
+    <app.alhaswamagellan.widget.colorpicker.PillSegmentedControl
         android:id="@+id/tab_toggle"
         android:layout_width="match_parent"
         android:layout_height="40dp"
@@ -60,21 +60,21 @@
             android:clipChildren="false"
             android:clipToPadding="false">
 
-            <app.organicmaps.widget.colorpicker.ColorGridView
+            <app.alhaswamagellan.widget.colorpicker.ColorGridView
                 android:id="@+id/grid_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_base"
                 android:layout_marginEnd="@dimen/margin_base" />
 
-            <app.organicmaps.widget.colorpicker.SpectrumColorView
+            <app.alhaswamagellan.widget.colorpicker.SpectrumColorView
                 android:id="@+id/spectrum_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="@dimen/margin_base"
                 android:layout_marginEnd="@dimen/margin_base" />
 
-            <app.organicmaps.widget.colorpicker.ColorSlidersView
+            <app.alhaswamagellan.widget.colorpicker.ColorSlidersView
                 android:id="@+id/sliders_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -116,7 +116,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1">
 
-                <app.organicmaps.widget.colorpicker.FlowLayout
+                <app.alhaswamagellan.widget.colorpicker.FlowLayout
                     android:id="@+id/presets_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

@@ -7,6 +7,6 @@ apply plugin: 'org.jetbrains.kotlin.android'
 apply from: "${rootProject.rootDir}/groovy/common-config.gradle"
 
 android {
-    namespace 'app.organicmaps.wear.protocol'
+    namespace 'app.alhaswamagellan.wear.protocol'
     project.ext.enableKotlin = true  // see app/build.gradle
 }

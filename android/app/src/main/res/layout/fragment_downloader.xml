@@ -37,7 +37,7 @@
     app:tint="?android:textColorPrimaryInverse"
     app:srcCompat="@drawable/ic_plus"/>
 
-  <app.organicmaps.widget.PlaceholderView
+  <app.alhaswamagellan.widget.PlaceholderView
     android:id="@+id/placeholder"
     android:layout_width="match_parent"
     android:layout_height="match_parent"

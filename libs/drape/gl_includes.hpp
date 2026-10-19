@@ -21,7 +21,7 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
-#include "android/sdk/src/main/cpp/app/organicmaps/sdk/opengl/gl3stub.h"
+#include "android/sdk/src/main/cpp/app/alhaswamagellan/sdk/opengl/gl3stub.h"
 #elif defined(OMIM_OS_LINUX)
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>

@@ -37,7 +37,7 @@
                 android:gravity="center"
                 android:padding="16dp">
 
-                <app.organicmaps.hawsa.MoonPhaseView
+                <app.alhaswamagellan.hawsa.MoonPhaseView
                     android:id="@+id/moon_phase_view"
                     android:layout_width="180dp"
                     android:layout_height="180dp" />

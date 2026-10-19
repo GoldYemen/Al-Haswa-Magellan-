@@ -1,0 +1,2256 @@
+package app.alhaswamagellan;
+
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.POST_NOTIFICATIONS;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static app.alhaswamagellan.sdk.location.LocationState.FOLLOW;
+import static app.alhaswamagellan.sdk.location.LocationState.FOLLOW_AND_ROTATE;
+import static app.alhaswamagellan.sdk.location.LocationState.LOCATION_TAG;
+import static app.alhaswamagellan.sdk.util.PowerManagment.POWER_MANAGEMENT_TAG;
+import static app.alhaswamagellan.sdk.util.Utils.dimen;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
+import android.app.Dialog;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.res.Configuration;
+import android.graphics.Color;
+import android.location.Location;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.text.TextUtils;
+import android.text.method.LinkMovementMethod;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.Window;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.activity.SystemBarStyle;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.IntentSenderRequest;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.CallSuper;
+import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.UiThread;
+import androidx.annotation.VisibleForTesting;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
+import androidx.lifecycle.ViewModelProvider;
+import app.alhaswamagellan.api.Const;
+import app.alhaswamagellan.base.BaseMwmFragmentActivity;
+import app.alhaswamagellan.bookmarks.BookmarkCategoriesActivity;
+import app.alhaswamagellan.downloader.DownloaderActivity;
+import app.alhaswamagellan.downloader.OnmapDownloader;
+import app.alhaswamagellan.editor.EditorActivity;
+import app.alhaswamagellan.editor.FeatureCategoryActivity;
+import app.alhaswamagellan.editor.OsmLoginActivity;
+import app.alhaswamagellan.help.HelpActivity;
+import app.alhaswamagellan.intent.Factory;
+import app.alhaswamagellan.intent.IntentProcessor;
+import app.alhaswamagellan.location.TrackRecordingService;
+import app.alhaswamagellan.maplayer.MapButtonsController;
+import app.alhaswamagellan.maplayer.MapButtonsViewModel;
+import app.alhaswamagellan.maplayer.ToggleMapLayerFragment;
+import app.alhaswamagellan.routing.NavigationController;
+import app.alhaswamagellan.routing.NavigationService;
+import app.alhaswamagellan.routing.RoutePointLabels;
+import app.alhaswamagellan.routing.RoutingErrorDialogFragment;
+import app.alhaswamagellan.routing.RoutingPlanController;
+import app.alhaswamagellan.routing.RoutingPlanFragment;
+import app.alhaswamagellan.routing.RoutingPlanViewModel;
+import app.alhaswamagellan.sdk.ChoosePositionMode;
+import app.alhaswamagellan.sdk.Framework;
+import app.alhaswamagellan.sdk.Map;
+import app.alhaswamagellan.sdk.MapController;
+import app.alhaswamagellan.sdk.MapRenderingListener;
+import app.alhaswamagellan.sdk.PlacePageActivationListener;
+import app.alhaswamagellan.sdk.Router;
+import app.alhaswamagellan.sdk.bookmarks.data.BookmarkManager;
+import app.alhaswamagellan.sdk.bookmarks.data.MapObject;
+import app.alhaswamagellan.sdk.bookmarks.data.TrackRecording;
+import app.alhaswamagellan.sdk.display.DisplayChangedListener;
+import app.alhaswamagellan.sdk.display.DisplayManager;
+import app.alhaswamagellan.sdk.display.DisplayType;
+import app.alhaswamagellan.sdk.downloader.MapManager;
+import app.alhaswamagellan.sdk.downloader.UpdateInfo;
+import app.alhaswamagellan.sdk.editor.Editor;
+import app.alhaswamagellan.sdk.editor.OsmOAuth;
+import app.alhaswamagellan.sdk.location.LocationHelper;
+import app.alhaswamagellan.sdk.location.LocationListener;
+import app.alhaswamagellan.sdk.location.LocationState;
+import app.alhaswamagellan.sdk.location.LocationUtils;
+import app.alhaswamagellan.sdk.location.SensorListener;
+import app.alhaswamagellan.sdk.location.TrackRecorder;
+import app.alhaswamagellan.sdk.maplayer.isolines.IsolinesState;
+import app.alhaswamagellan.sdk.routing.RoutingController;
+import app.alhaswamagellan.sdk.routing.RoutingOptions;
+import app.alhaswamagellan.sdk.search.SearchEngine;
+import app.alhaswamagellan.sdk.settings.RoadType;
+import app.alhaswamagellan.sdk.settings.UnitLocale;
+import app.alhaswamagellan.sdk.util.Config;
+import app.alhaswamagellan.sdk.util.Language;
+import app.alhaswamagellan.sdk.util.PowerManagment;
+import app.alhaswamagellan.sdk.util.StringUtils;
+import app.alhaswamagellan.sdk.util.log.Logger;
+import app.alhaswamagellan.sdk.widget.placepage.PlacePageData;
+import app.alhaswamagellan.search.SearchFragmentController;
+import app.alhaswamagellan.search.SearchPageViewModel;
+import app.alhaswamagellan.search.SearchRequest;
+import app.alhaswamagellan.settings.SettingsActivity;
+import app.alhaswamagellan.util.SharingUtils;
+import app.alhaswamagellan.util.ThemeSwitcher;
+import app.alhaswamagellan.util.ThemeUtils;
+import app.alhaswamagellan.util.UiUtils;
+import app.alhaswamagellan.util.Utils;
+import app.alhaswamagellan.util.WindowInsetUtils.BaselinePaddingInsetsListener;
+import app.alhaswamagellan.util.bottomsheet.MenuBottomSheetFragment;
+import app.alhaswamagellan.util.bottomsheet.MenuBottomSheetItem;
+import app.alhaswamagellan.widget.placepage.PlacePageController;
+import app.alhaswamagellan.widget.placepage.PlacePageViewModel;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import java.util.ArrayList;
+import java.util.Objects;
+
+public class MwmActivity extends BaseMwmFragmentActivity
+    implements PlacePageActivationListener, MapRenderingListener, RoutingController.Container, LocationListener,
+               SensorListener, LocationState.ModeChangeListener, BookmarkManager.BookmarksLoadingListener,
+               MenuBottomSheetFragment.MenuBottomSheetInterfaceWithHeader, PlacePageController.PlacePageListener,
+               MapButtonsController.MapButtonClickListener, DisplayChangedListener, RoutingPlanController
+{
+  private static final String TAG = MwmActivity.class.getSimpleName();
+
+  public static final String EXTRA_COUNTRY_ID = "country_id";
+  public static final String EXTRA_CATEGORY_ID = "category_id";
+  public static final String EXTRA_BOOKMARK_ID = "bookmark_id";
+  public static final String EXTRA_TRACK_ID = "track_id";
+  public static final String EXTRA_UPDATE_THEME = "update_theme";
+  // Al-Haswa Magellan: extras for viewport without green pin
+  public static final String EXTRA_HAWSA_LAT = "hawsa_lat";
+  public static final String EXTRA_HAWSA_LON = "hawsa_lon";
+  public static final String EXTRA_HAWSA_ZOOM = "hawsa_zoom";
+  // Stored both in the saved instance state and, when the core restarts, in the intent itself.
+  static final String EXTRA_CONSUMED = "mwm.extra.intent.processed";
+  private boolean mIntentConsumed = false;
+  private boolean mPreciseLocationDialogShown = false;
+
+  private static final String MAIN_MENU_ID = "MAIN_MENU_BOTTOM_SHEET";
+  private static final String LAYERS_MENU_ID = "LAYERS_MENU_BOTTOM_SHEET";
+
+  private static final String POWER_SAVE_DISCLAIMER_SHOWN = "POWER_SAVE_DISCLAIMER_SHOWN";
+
+  @SuppressWarnings("NotNullFieldNotInitialized")
+  @NonNull
+  private MapController mMapController;
+
+  private View mPointChooser;
+  private Toolbar mPointChooserToolbar;
+  private TextView mPointChooserTitle;
+  private TextView mPointChooserHint;
+
+  private NavigationController mNavigationController;
+  @Nullable
+  private OnmapDownloader mOnmapDownloader;
+
+  private String mDonatesUrl;
+
+  private int mNavBarHeight;
+
+  private RoutingPlanViewModel mRoutingPlanViewModel;
+  private PlacePageViewModel mPlacePageViewModel;
+  private SearchPageViewModel mSearchPageViewModel;
+  private MapButtonsViewModel mMapButtonsViewModel;
+  private MapButtonsController.LayoutMode mPreviousMapLayoutMode;
+
+  // Viewport rotation polling for gesture-rotation detection
+  private Handler mViewportPollHandler;
+  private Runnable mViewportPollRunnable;
+  private static final int VIEWPORT_POLL_INTERVAL_MS = 500;
+
+  @Nullable
+  private WindowInsetsCompat mCurrentWindowInsets;
+
+  @Nullable
+  private Dialog mLocationErrorDialog;
+
+  @Nullable
+  private Dialog mAlertDialog;
+
+  @SuppressWarnings("NotNullFieldNotInitialized")
+  private ActivityResultLauncher<String[]> mLocationPermissionRequest;
+  private boolean mLocationPermissionRequestedForRecording = false;
+
+  @SuppressWarnings("NotNullFieldNotInitialized")
+  private ActivityResultLauncher<String> mPostNotificationPermissionRequest;
+
+  @SuppressWarnings("NotNullFieldNotInitialized")
+  private ActivityResultLauncher<IntentSenderRequest> mLocationResolutionRequest;
+  @SuppressWarnings("NotNullFieldNotInitialized")
+  @NonNull
+  private ActivityResultLauncher<SharingUtils.SharingIntent> mShareLauncher;
+  @SuppressWarnings("NotNullFieldNotInitialized")
+  private ActivityResultLauncher<Intent> mPowerSaveSettings;
+  private boolean mPowerSaveDisclaimerShown = false;
+
+  @SuppressWarnings("NotNullFieldNotInitialized")
+  @NonNull
+  private DisplayManager mDisplayManager;
+
+  private boolean mRemoveDisplayListener = true;
+  private static int mLastUiMode = Configuration.UI_MODE_TYPE_UNDEFINED;
+
+  public static Intent createShowMapIntent(@NonNull Context context, @Nullable String countryId)
+  {
+    return new Intent(context, DownloadResourcesLegacyActivity.class).putExtra(EXTRA_COUNTRY_ID, countryId);
+  }
+
+  @Override
+  public void onRenderingCreated()
+  {
+    checkMeasurementSystem();
+  }
+
+  @Override
+  @Keep
+  public void onRenderingInitializationFinished()
+  {
+    ThemeSwitcher.INSTANCE.synchronizeMapStyle(this, mMapController.isRenderingActive());
+
+    Framework.nativeRestoreDownloadQueue();
+
+    if (RoutingController.get().isPlanning())
+      restoreRoutingUI(MapButtonsController.LayoutMode.planning);
+    else if (RoutingController.get().isNavigating())
+      restoreRoutingUI(MapButtonsController.LayoutMode.navigation);
+    else if (RoutingController.get().hasSavedRoute())
+      RoutingController.get().restoreRoute();
+    if (mSearchPageViewModel.getSearchEnabled().getValue() == null && mSearchPageViewModel.isSearchPersistedActive())
+    {
+      mSearchPageViewModel.setSearchPageLastState(mSearchPageViewModel.getPersistedSheetState());
+      final SearchRequest restored = new SearchRequest(mSearchPageViewModel.getPersistedQuery(), null,
+                                                       mSearchPageViewModel.getPersistedIsCategory());
+      mSearchPageViewModel.setSearchEnabled(true, restored);
+    }
+
+    if (TrackRecorder.nativeIsTrackRecordingEnabled() && !startTrackRecording())
+    {
+      // The user has revoked location permissions in the system settings, causing the app to
+      // restart while recording was active. Save the recorded data and stop the recording.
+      saveAndStopTrackRecording();
+    }
+
+    processIntent();
+    migrateOAuthCredentials();
+  }
+
+  /**
+   * Process intents AFTER rendering is initialized.
+   */
+  private void processIntent()
+  {
+    if (!Map.isEngineCreated())
+      throw new AssertionError("Must be called with initialized Drape");
+
+    final Intent intent = getIntent();
+    if (intent == null || mIntentConsumed)
+      return;
+    mIntentConsumed = true;
+
+    final long categoryId = intent.getLongExtra(EXTRA_CATEGORY_ID, -1);
+    final long bookmarkId = intent.getLongExtra(EXTRA_BOOKMARK_ID, -1);
+    final long trackId = intent.getLongExtra(EXTRA_TRACK_ID, -1);
+    if (bookmarkId != -1)
+    {
+      Objects.requireNonNull(BookmarkManager.INSTANCE.getBookmarkInfo(bookmarkId));
+      BookmarkManager.INSTANCE.showBookmarkOnMap(bookmarkId);
+      return;
+    }
+    else if (trackId != -1)
+    {
+      Objects.requireNonNull(BookmarkManager.INSTANCE.getTrack(trackId));
+      Framework.nativeShowTrackRect(trackId);
+      return;
+    }
+    else if (categoryId != -1)
+    {
+      BookmarkManager.INSTANCE.showBookmarkCategoryOnMap(categoryId);
+      return;
+    }
+
+    // Al-Haswa Magellan: open map at coordinates WITHOUT green pin
+    if (intent.hasExtra(EXTRA_HAWSA_LAT) && intent.hasExtra(EXTRA_HAWSA_LON))
+    {
+      double lat = intent.getDoubleExtra(EXTRA_HAWSA_LAT, 0);
+      double lon = intent.getDoubleExtra(EXTRA_HAWSA_LON, 0);
+      int zoom = intent.getIntExtra(EXTRA_HAWSA_ZOOM, 10);
+      Framework.nativeSetViewportCenter(lat, lon, zoom);
+      Framework.nativeStopLocationFollow();
+      return;
+    }
+
+    final String countryId = intent.getStringExtra(EXTRA_COUNTRY_ID);
+    if (countryId != null)
+    {
+      Framework.nativeShowCountry(countryId, false);
+      return;
+    }
+
+    final IntentProcessor[] mIntentProcessors = {
+        new Factory.GoggleAssistanceIntentProcessor(),
+        new Factory.UrlProcessor(),
+        new Factory.KmzKmlProcessor(),
+    };
+    for (IntentProcessor ip : mIntentProcessors)
+    {
+      if (ip.process(intent, this))
+        break;
+    }
+  }
+
+  private void migrateOAuthCredentials()
+  {
+    if (OsmOAuth.containsOAuth1Credentials())
+    {
+      // Remove old OAuth v1 secrets
+      OsmOAuth.clearOAuth1Credentials();
+
+      // Notify user to re-login
+      dismissAlertDialog();
+      final DialogInterface.OnClickListener navigateToLoginHandler =
+          (dialog, which) -> startActivity(new Intent(MwmActivity.this, OsmLoginActivity.class));
+
+      final int marginBase = getResources().getDimensionPixelSize(R.dimen.margin_base);
+      final float textSize = getResources().getDimension(R.dimen.line_spacing_extra_1);
+      final TextView text = new TextView(this);
+      text.setText(getText(R.string.alert_reauth_message));
+      text.setPadding(marginBase, marginBase, marginBase, marginBase);
+      text.setTextSize(textSize);
+      text.setMovementMethod(LinkMovementMethod.getInstance());
+
+      mAlertDialog = new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+                         .setTitle(R.string.login_osm)
+                         .setView(text)
+                         .setPositiveButton(R.string.login, navigateToLoginHandler)
+                         .setNegativeButton(R.string.cancel, null)
+                         .setOnDismissListener(dialog -> mAlertDialog = null)
+                         .show();
+    }
+  }
+
+  private static void checkMeasurementSystem()
+  {
+    UnitLocale.initializeCurrentUnits();
+  }
+
+  public boolean closeSearchFragment()
+  {
+    Fragment f = getSupportFragmentManager().findFragmentById(R.id.search_container_fragment);
+    if (f instanceof SearchFragmentController controller)
+      return controller.onBackPressed();
+    return false;
+  }
+
+  public void forceCloseSearchFragment()
+  {
+    if (mSearchPageViewModel == null)
+      return;
+    mSearchPageViewModel.setSearchEnabled(false, null);
+  }
+
+  private void showBookmarks()
+  {
+    BookmarkCategoriesActivity.start(this);
+  }
+
+  private void showHelp()
+  {
+    Intent intent = new Intent(this, HelpActivity.class);
+    startActivity(intent);
+  }
+
+  public void showSearch(String query)
+  {
+    showSearch(query, null, false);
+  }
+
+  // Entry point for deep links (om://search, geo://, Google Assistant). isSearchOnMap=true runs a
+  // viewport-only search that drops result pins on the map without opening the sheet; otherwise the
+  // sheet is opened via the ViewModel.
+  public void showSearch(String query, @Nullable String locale, boolean isSearchOnMap)
+  {
+    if (isSearchOnMap)
+    {
+      runViewportOnlySearch(query, locale);
+      return;
+    }
+    mSearchPageViewModel.setSearchEnabled(true, new SearchRequest(query, locale));
+  }
+
+  private void runViewportOnlySearch(@NonNull String query, @Nullable String locale)
+  {
+    // Match the pre-refactor flow: clear any prior interactive search + API points before starting.
+    SearchEngine.INSTANCE.cancel();
+
+    final String lang = locale != null ? locale : Language.getKeyboardLocale(this);
+    final Location loc = MwmApplication.from(this).getLocationHelper().getSavedLocation();
+    final boolean hasLocation = loc != null;
+    final double lat = hasLocation ? loc.getLatitude() : 0;
+    final double lon = hasLocation ? loc.getLongitude() : 0;
+
+    SearchEngine.INSTANCE.setQuery(query);
+    SearchEngine.INSTANCE.searchInteractive(query, false /* isCategory */, lang, System.nanoTime(),
+                                            false /* isMapAndTable */, hasLocation, lat, lon);
+  }
+
+  public void showEditor()
+  {
+    // TODO(yunikkk) think about refactoring. It probably should be called in editor.
+    Editor.nativeStartEdit();
+    EditorActivity.start(this);
+  }
+
+  private void shareMyLocation()
+  {
+    final Location loc = MwmApplication.from(this).getLocationHelper().getSavedLocation();
+    if (loc != null)
+    {
+      SharingUtils.shareLocation(this, loc);
+      return;
+    }
+
+    dismissLocationErrorDialog();
+    mLocationErrorDialog = new MaterialAlertDialogBuilder(MwmActivity.this, R.style.MwmTheme_AlertDialog)
+                               .setMessage(R.string.unknown_current_position)
+                               .setCancelable(true)
+                               .setPositiveButton(R.string.ok, null)
+                               .setOnDismissListener(dialog -> mLocationErrorDialog = null)
+                               .show();
+  }
+
+  private void showDownloader(boolean openDownloaded)
+  {
+    final Bundle args = new Bundle();
+    args.putBoolean(DownloaderActivity.EXTRA_OPEN_DOWNLOADED, openDownloaded);
+    startActivity(new Intent(this, DownloaderActivity.class).putExtras(args));
+  }
+
+  @Override
+  public void onDisplayChangedToCar(@NonNull Runnable onTaskFinishedCallback)
+  {
+    mRemoveDisplayListener = false;
+    startActivity(new Intent(this, MapPlaceholderActivity.class));
+    mMapController.setOnDestroyListener(onTaskFinishedCallback);
+    finish();
+  }
+
+  @Override
+  public void onConfigurationChanged(@NonNull Configuration newConfig)
+  {
+    super.onConfigurationChanged(newConfig);
+
+    final int newType = newConfig.uiMode & Configuration.UI_MODE_TYPE_MASK;
+    final int oldType = mLastUiMode & Configuration.UI_MODE_TYPE_MASK;
+
+    mLastUiMode = newConfig.uiMode;
+
+    final boolean carModeChanged =
+        newType != oldType && (newType == Configuration.UI_MODE_TYPE_CAR || oldType == Configuration.UI_MODE_TYPE_CAR);
+
+    if (carModeChanged)
+      return;
+
+    recreate();
+  }
+
+  /**
+   * The activity created once the core is up does not inherit this instance's saved state, so the
+   * mark has to travel in the intent, which outlives the flag reset in {@link SplashActivity}.
+   * <p>
+   * The mark is written even when it is {@code false}. Its mere presence tells the splash that the
+   * state of this intent is known, so a file that has not been imported yet is not written off as
+   * handled by {@link SplashActivity#markIntentConsumedIfRelaunchedFromHistory}.
+   */
+  @Override
+  protected void prepareIntentForCoreRestart(@NonNull Intent intent, @Nullable Bundle savedInstanceState)
+  {
+    if (savedInstanceState != null)
+      intent.putExtra(EXTRA_CONSUMED, savedInstanceState.getBoolean(EXTRA_CONSUMED, false));
+  }
+
+  /**
+   * Tells whether the intent this activity starts with has already been processed. A configuration
+   * change restores the mark from the instance's own state, while a core restart through
+   * {@link SplashActivity} re-creates the activity from scratch and only the intent survives.
+   */
+  @VisibleForTesting
+  static boolean isIntentConsumed(@Nullable Bundle savedInstanceState, @Nullable Intent intent)
+  {
+    if (savedInstanceState != null)
+      return savedInstanceState.getBoolean(EXTRA_CONSUMED, false);
+
+    return intent != null && intent.getBooleanExtra(EXTRA_CONSUMED, false);
+  }
+
+  @SuppressLint("InlinedApi")
+  @CallSuper
+  @Override
+  protected void onSafeCreate(@Nullable Bundle savedInstanceState)
+  {
+    super.onSafeCreate(savedInstanceState);
+
+    mIntentConsumed = isIntentConsumed(savedInstanceState, getIntent());
+
+    setContentView(R.layout.activity_map);
+    makeNavigationBarTransparentInLightMode();
+
+    mRoutingPlanViewModel = new ViewModelProvider(this).get(RoutingPlanViewModel.class);
+    mPlacePageViewModel = new ViewModelProvider(this).get(PlacePageViewModel.class);
+    mSearchPageViewModel = new ViewModelProvider(this).get(SearchPageViewModel.class);
+    mMapButtonsViewModel = new ViewModelProvider(this).get(MapButtonsViewModel.class);
+    TrackRecordingService.isRecording().observe(this, recording -> {
+      // Recording can be stopped from the notification, tear down the UI when it happens.
+      if (Boolean.FALSE.equals(recording)
+          && Boolean.TRUE.equals(mMapButtonsViewModel.getTrackRecorderState().getValue()))
+        stopTrackRecording();
+    });
+    // We don't need to manually handle removing the observers it follows the activity lifecycle
+    mMapButtonsViewModel.getBottomButtonsHeight().observe(this, this::onMapBottomButtonsHeightChange);
+    mMapButtonsViewModel.getLayoutMode().observe(this, this::initNavigationButtons);
+    // Bridge search-active state into RoutingPlanViewModel so the routing sheet hides under the search
+    // bottom sheet. RoutingPlanFragment stays decoupled from SearchPageViewModel; the activity is the
+    // single place that knows about both subsystems.
+    mSearchPageViewModel.getSearchEnabled().observe(
+        this, enabled -> mRoutingPlanViewModel.setIsSearchActive(Boolean.TRUE.equals(enabled)));
+
+    // Note: You must call registerForActivityResult() before the fragment or activity is created.
+    mLocationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(),
+                                                           this::onLocationPermissionsResult);
+    mLocationResolutionRequest = registerForActivityResult(new ActivityResultContracts.StartIntentSenderForResult(),
+                                                           this::onLocationResolutionResult);
+    mPostNotificationPermissionRequest = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+                                                                   this::onPostNotificationPermissionResult);
+    mPowerSaveSettings =
+        registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), this::onPowerSaveResult);
+
+    mShareLauncher = SharingUtils.RegisterLauncher(this);
+
+    mDisplayManager = MwmApplication.from(this).getDisplayManager();
+    if (mDisplayManager.isCarDisplayUsed())
+    {
+      mRemoveDisplayListener = false;
+      startActivity(new Intent(this, MapPlaceholderActivity.class));
+      finish();
+      return;
+    }
+    mDisplayManager.addListener(DisplayType.Device, this);
+
+    final Intent intent = getIntent();
+    final boolean isLaunchByDeepLink = intent != null && !intent.hasCategory(Intent.CATEGORY_LAUNCHER);
+    initViews(isLaunchByDeepLink);
+    updateViewsInsets();
+
+    if (getIntent().getBooleanExtra(EXTRA_UPDATE_THEME, false))
+      ThemeSwitcher.INSTANCE.synchronizeApplicationTheme();
+
+    ThemeSwitcher.INSTANCE.synchronizeMapStyle(this, mMapController.isRenderingActive());
+
+    /*
+     * onRenderingInitializationFinished() hook is not called when MwmActivity is recreated with the already
+     * initialized Drape engine. This can happen when the activity is swiped away from the most recent app lists
+     * during navigation and then restarted from the launcher. Call this hook explicitly here to run operations
+     * that require initialized Drape, such as restoring navigation and processing incoming intents.
+     * https://github.com/organicmaps/organicmaps/issues/6712
+     */
+    if (Map.isEngineCreated())
+      onRenderingInitializationFinished();
+    updateDrivingOptionCount();
+  }
+
+  @NonNull
+  @Override
+  protected SystemBarStyle getStatusBarStyle()
+  {
+    return SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT);
+  }
+
+  private void refreshLightStatusBar()
+  {
+    UiUtils.setLightStatusBar(this, !(ThemeUtils.isDarkTheme(this) || RoutingController.get().isPlanning()
+                                      || ChoosePositionMode.get() != ChoosePositionMode.None));
+  }
+
+  private void updateViewsInsets()
+  {
+    // Global listener on the activity's semantic root, so insets are captured regardless
+    // of which overlay views happen to be present at dispatch time.
+    ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.coordinator), (view, windowInsets) -> {
+      final int trackRecorderOffset =
+          TrackRecorder.nativeIsTrackRecordingEnabled() ? dimen(this, R.dimen.map_button_size) : 0;
+      final Insets systemBars = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+      // Drive nav-bar height from the AndroidX visibility signal — pre-R FLAG_FULLSCREEN
+      // hides only the status bar, so inferring from app state misreports the nav bar.
+      mNavBarHeight = windowInsets.isVisible(WindowInsetsCompat.Type.navigationBars()) ? systemBars.bottom : 0;
+      // Al-Haswa: Compass now sits above zoom buttons on bottom-right
+      // Calculate offset from bottom: nav bar + my-position button + zoom buttons + compass
+      if (mCurrentWindowInsets == null)
+        updateCompassOffsetBottom(systemBars.bottom, systemBars.right);
+      refreshLightStatusBar();
+      updateBottomWidgetsOffset(systemBars.left);
+      mCurrentWindowInsets = windowInsets;
+      return windowInsets;
+    });
+
+    // Position-chooser overlay paddings: the root takes the bottom inset, the toolbar takes
+    // the side + top insets so it clears status bar and side cutouts.
+    ViewCompat.setOnApplyWindowInsetsListener(mPointChooser, BaselinePaddingInsetsListener.onlyBottom());
+    ViewCompat.setOnApplyWindowInsetsListener(mPointChooserToolbar, BaselinePaddingInsetsListener.excludeBottom());
+  }
+
+  private int getDownloadMapsCounter()
+  {
+    UpdateInfo info = MapManager.nativeGetUpdateInfo(null);
+    return info == null ? 0 : info.filesCount;
+  }
+
+  private void initViews(boolean isLaunchByDeeplink)
+  {
+    mMapController = new MapController(findViewById(R.id.map), MwmApplication.from(this).getLocationHelper(), this,
+                                       this::reportUnsupported, isLaunchByDeeplink);
+    getLifecycle().addObserver(mMapController);
+
+    initNavigationButtons();
+
+    mNavigationController = new NavigationController(
+        this, v -> onSettingsOptionSelected(), v -> openVoiceInstructionsSettings(), this::updateBottomWidgetsOffset);
+    // TrafficManager.INSTANCE.attach(mNavigationController);
+    initOnmapDownloader();
+    initPositionChooser();
+  }
+
+  private void updateDrivingOptionCount()
+  {
+    mRoutingPlanViewModel.setDrivingOptionsCount(RoutingOptions.getActiveRoadTypes().size());
+  }
+
+  private void initPositionChooser()
+  {
+    mPointChooser = findViewById(R.id.position_chooser);
+    if (mPointChooser == null)
+      return;
+
+    mPointChooserToolbar = mPointChooser.findViewById(R.id.toolbar_point_chooser);
+    mPointChooserTitle = mPointChooser.findViewById(R.id.title);
+    mPointChooserHint = mPointChooser.findViewById(R.id.hint);
+    UiUtils.showHomeUpButton(mPointChooserToolbar);
+    mPointChooserToolbar.setNavigationOnClickListener(v -> closePositionChooser());
+    mPointChooser.findViewById(R.id.done).setOnClickListener(v -> {
+      switch (ChoosePositionMode.get())
+      {
+      case Api:
+        final Intent apiResult = new Intent();
+        final double[] center = Framework.nativeGetScreenRectCenter();
+        apiResult.putExtra(Const.EXTRA_POINT_LAT, center[0]);
+        apiResult.putExtra(Const.EXTRA_POINT_LON, center[1]);
+        apiResult.putExtra(Const.EXTRA_ZOOM_LEVEL, Framework.nativeGetDrawScale());
+        setResult(Activity.RESULT_OK, apiResult);
+        finish();
+        break;
+      case Editor:
+        if (Framework.nativeIsDownloadedMapAtScreenCenter())
+        {
+          // Snapshot the position now: by the time the user picks a category the viewport may
+          // have drifted (location follow, layout changes) and the recheck inside the JNI
+          // create call would land on a different — possibly unloaded — MWM.
+          final double[] editorCenter = Framework.nativeGetScreenRectCenter();
+          FeatureCategoryActivity.start(MwmActivity.this, editorCenter[0], editorCenter[1]);
+        }
+        else
+        {
+          dismissAlertDialog();
+          mAlertDialog = new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+                             .setTitle(R.string.message_invalid_feature_position)
+                             .setPositiveButton(R.string.ok, null)
+                             .setOnDismissListener(dialog -> mAlertDialog = null)
+                             .show();
+        }
+        break;
+      case Routing:
+        final double[] routePoint = Framework.nativeGetScreenRectCenter();
+        // An empty address is fine: the route point then falls back to formatted coordinates.
+        RoutingController.get().onPoiSelected(MapObject.createMapObject(
+            MapObject.POI, Framework.nativeGetAddress(routePoint[0], routePoint[1]), "", routePoint[0], routePoint[1]));
+        break;
+      case None: throw new IllegalStateException("Unexpected position chooser mode");
+      }
+      closePositionChooser();
+    });
+    UiUtils.hide(mPointChooser);
+  }
+
+  /**
+   *Hides/shows UI while keeping state
+   * @param isUiHidden True to hide the UI
+   **/
+  public void hideOrShowUIWithoutClosingPlacePage(boolean isUiHidden)
+  {
+    // Used instead of closeBottomSheet to preserve state and hide instantly
+    UiUtils.showIf(!isUiHidden, findViewById(R.id.place_page_container_fragment));
+    mMapButtonsViewModel.setButtonsHidden(isUiHidden);
+  }
+
+  public void showPositionChooserForAPI(@Nullable String appName)
+  {
+    showPositionChooser(ChoosePositionMode.Api, false, false);
+    if (!TextUtils.isEmpty(appName))
+    {
+      setTitle(appName);
+      mPointChooserTitle.setText(appName);
+    }
+  }
+
+  public void showPositionChooserForEditor(boolean isBusiness, boolean applyPosition)
+  {
+    showPositionChooser(ChoosePositionMode.Editor, isBusiness, applyPosition);
+  }
+
+  public void showPositionChooserForRoutePoint()
+  {
+    // The shortcut row stays clickable while the search sheet animates away, by which time the other row or
+    // a result may already have consumed the pick, leaving nothing for the crosshair to commit into.
+    if (!RoutingController.get().isWaitingPoiPick())
+      return;
+
+    showPositionChooser(ChoosePositionMode.Routing, false, false);
+  }
+
+  private void showPositionChooser(ChoosePositionMode mode, boolean isBusiness, boolean applyPosition)
+  {
+    if (isFullscreen())
+      exitFullscreen();
+    // Re-entering the same mode must keep the chooser open: closing Routing would cancel the pending pick.
+    // Mark the chooser active before closing panels so the routing sheet stays hidden as search closes.
+    if (ChoosePositionMode.get() != mode)
+      closePositionChooser();
+    mRoutingPlanViewModel.setIsPointChooserActive(true);
+    closeFloatingPanels();
+    updatePositionChooserText(mode);
+    UiUtils.show(mPointChooser);
+    mMapButtonsViewModel.setButtonsHidden(true);
+    ChoosePositionMode.set(mode, isBusiness, applyPosition);
+    refreshLightStatusBar();
+  }
+
+  private void updatePositionChooserText(ChoosePositionMode mode)
+  {
+    if (mode != ChoosePositionMode.Routing)
+    {
+      mPointChooserTitle.setText(R.string.editor_add_select_location);
+      mPointChooserHint.setText(R.string.editor_focus_map_on_location);
+      return;
+    }
+
+    final RoutingController controller = RoutingController.get();
+    mPointChooserTitle.setText(
+        RoutePointLabels.pickTitle(controller.getWaitingPoiPickType(), controller.isPoiPickReplaceStop()));
+    mPointChooserHint.setText(R.string.choose_point_on_map_hint);
+  }
+
+  private void hidePositionChooser()
+  {
+    UiUtils.hide(mPointChooser);
+    ChoosePositionMode mode = ChoosePositionMode.get();
+    ChoosePositionMode.set(ChoosePositionMode.None, false, false);
+    mMapButtonsViewModel.setButtonsHidden(false);
+    mRoutingPlanViewModel.setIsPointChooserActive(false);
+    Framework.nativeDeactivatePopup();
+    refreshLightStatusBar();
+    if (mode == ChoosePositionMode.Api)
+      finish();
+    // No-op once Done committed the point; cancels the pick on every other way out.
+    else if (mode == ChoosePositionMode.Routing)
+      RoutingController.get().onPoiSelected(null);
+  }
+
+  private void initNavigationButtons()
+  {
+    initNavigationButtons(mMapButtonsViewModel.getLayoutMode().getValue());
+  }
+
+  private void initNavigationButtons(MapButtonsController.LayoutMode layoutMode)
+  {
+    // Recreate the navigation buttons with the correct layout when it changes
+    if (mPreviousMapLayoutMode != layoutMode)
+    {
+      FragmentTransaction transaction =
+          getSupportFragmentManager().beginTransaction().replace(R.id.map_buttons, new MapButtonsController());
+      transaction.commit();
+      mPreviousMapLayoutMode = layoutMode;
+    }
+  }
+
+  @Override
+  public void onSearchCanceled()
+  {
+    mMapButtonsViewModel.setSearchOption(null);
+    forceCloseSearchFragment();
+  }
+
+  @Override
+  public void onMapButtonClick(MapButtonsController.MapButtons button)
+  {
+    switch (button)
+    {
+    case zoomIn -> Map.zoomIn();
+    case zoomOut -> Map.zoomOut();
+    // Al-Haswa: nav_north button removed, C++ compass handles reset-to-north via tap
+    case myPosition ->
+    {
+      Logger.i(LOCATION_TAG, "The location button pressed");
+      // Calls onMyPositionModeChanged(mode + 1).
+      LocationState.nativeSwitchToNextMode();
+    }
+    case toggleMapLayer -> toggleMapLayerBottomSheet();
+    case bookmarks -> showBookmarks();
+    case search -> showSearch("");
+    case menu ->
+    {
+      closeFloatingPanels();
+      showBottomSheet(MAIN_MENU_ID);
+    }
+    case help -> showHelp();
+    case trackRecordingStatus -> toggleTrackRecordingPP();
+    }
+  }
+
+  private boolean closeBottomSheet(String id)
+  {
+    MenuBottomSheetFragment bottomSheet = (MenuBottomSheetFragment) getSupportFragmentManager().findFragmentByTag(id);
+    if (bottomSheet == null || !bottomSheet.isAdded())
+      return false;
+    bottomSheet.dismiss();
+    return true;
+  }
+
+  private void showBottomSheet(String id)
+  {
+    MenuBottomSheetFragment.newInstance(id).show(getSupportFragmentManager(), id);
+  }
+
+  private void toggleMapLayerBottomSheet()
+  {
+    if (!closeBottomSheet(LAYERS_MENU_ID))
+      showBottomSheet(LAYERS_MENU_ID);
+  }
+
+  /**
+   * @return False if the place page was already closed, true otherwise
+   */
+  public boolean closePlacePage()
+  {
+    if (mPlacePageViewModel.getMapObject().getValue() == null)
+      return false;
+
+    mPlacePageViewModel.setMapObject(null);
+    return true;
+  }
+
+  /**
+   * @return False if the navigation menu was already collapsed or hidden, true otherwise
+   */
+  public boolean collapseNavMenu()
+  {
+    if (mNavigationController.isNavMenuCollapsed() || mNavigationController.isNavMenuHidden())
+      return false;
+    mNavigationController.collapseNavMenu();
+    return true;
+  }
+
+  /**
+   * @return False if the position chooser was already closed, true otherwise
+   */
+  private boolean closePositionChooser()
+  {
+    if (UiUtils.isVisible(mPointChooser))
+    {
+      hidePositionChooser();
+      return true;
+    }
+    return false;
+  }
+
+  private void closeFloatingToolbarsAndPanels()
+  {
+    closePositionChooser();
+    closeFloatingPanels();
+  }
+
+  public void closeFloatingPanels()
+  {
+    closeBottomSheet(LAYERS_MENU_ID);
+    closeBottomSheet(MAIN_MENU_ID);
+    forceCloseSearchFragment();
+    closePlacePage();
+  }
+
+  public void startLocationToPoint(final @Nullable MapObject endPoint)
+  {
+    closeFloatingPanels();
+    if (isFullscreen())
+      exitFullscreen();
+
+    if (LocationState.getMode() == LocationState.NOT_FOLLOW_NO_POSITION)
+    {
+      // Calls onMyPositionModeChanged(PENDING_POSITION).
+      LocationState.nativeSwitchToNextMode();
+    }
+
+    MapObject startPoint = MwmApplication.from(this).getLocationHelper().getMyPosition();
+    RoutingController.get().prepare(startPoint, endPoint);
+  }
+
+  private void initOnmapDownloader()
+  {
+    mOnmapDownloader = new OnmapDownloader(this, this.findViewById(R.id.onmap_downloader));
+  }
+
+  @Override
+  protected void onSaveInstanceState(@NonNull Bundle outState)
+  {
+    RoutingController.get().onSaveState();
+
+    Integer sheetState = mSearchPageViewModel.getSearchPageLastState().getValue();
+    boolean isSearchActive = Boolean.TRUE.equals(mSearchPageViewModel.getSearchEnabled().getValue())
+                          && sheetState != null && sheetState != BottomSheetBehavior.STATE_HIDDEN;
+    final String query = isSearchActive ? SearchEngine.INSTANCE.getCachedSearchBarQuery() : null;
+    final boolean isCategory = isSearchActive && mSearchPageViewModel.isCurrentToolbarCategorical();
+    mSearchPageViewModel.persistSearchState(isSearchActive, query != null ? query : "",
+                                            isSearchActive ? sheetState : BottomSheetBehavior.STATE_HIDDEN, isCategory);
+
+    if (!isChangingConfigurations())
+      RoutingController.get().saveRoute();
+    else
+      // We no longer need in a saved route if it's a configuration changing: theme switching,
+      // orientation changing, etc. Otherwise, the saved route might be restored at undesirable moment.
+      RoutingController.get().deleteSavedRoute();
+
+    outState.putBoolean(POWER_SAVE_DISCLAIMER_SHOWN, mPowerSaveDisclaimerShown);
+    outState.putBoolean(EXTRA_CONSUMED, mIntentConsumed);
+    super.onSaveInstanceState(outState);
+  }
+
+  @Override
+  protected void onRestoreInstanceState(@NonNull Bundle savedInstanceState)
+  {
+    super.onRestoreInstanceState(savedInstanceState);
+    // The routing plan fragment is restored by the FragmentManager and re-applies its own saved sheet state,
+    // so there is nothing routing-related to restore here.
+    mPowerSaveDisclaimerShown = savedInstanceState.getBoolean(POWER_SAVE_DISCLAIMER_SHOWN, false);
+  }
+
+  private void rebuildLastRoute()
+  {
+    RoutingController.get().attach(this);
+    RoutingController.get().rebuildLastRoute();
+  }
+
+  private void onIsolinesStateChanged(@NonNull IsolinesState type)
+  {
+    if (type == IsolinesState.NODATA)
+    {
+      Toast.makeText(this, R.string.isolines_location_error_dialog, Toast.LENGTH_SHORT).show();
+    }
+
+    if (type == IsolinesState.EXPIREDDATA)
+    {
+      mAlertDialog = new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+                         .setTitle(R.string.downloader_update_maps)
+                         .setMessage(R.string.isolines_activation_error_dialog)
+                         .setPositiveButton(
+                             R.string.ok, (dialog, which) -> startActivity(new Intent(this, DownloaderActivity.class)))
+                         .setNegativeButton(R.string.cancel, null)
+                         .setOnDismissListener(dialog -> mAlertDialog = null)
+                         .show();
+    }
+  }
+
+  @Override
+  protected void onNewIntent(Intent intent)
+  {
+    setIntent(intent);
+    mIntentConsumed = false;
+    super.onNewIntent(intent);
+    if (mMapController.isRenderingActive())
+      processIntent();
+  }
+
+  @CallSuper
+  @Override
+  protected void onResume()
+  {
+    super.onResume();
+    ThemeSwitcher.INSTANCE.synchronizeApplicationTheme();
+    ThemeSwitcher.INSTANCE.synchronizeMapStyle(this, mMapController.isRenderingActive());
+    makeNavigationBarTransparentInLightMode();
+    // The pick lives in RoutingController, which clears it without touching the chooser, and can do so while
+    // this Activity is stopped and detached from it. Only the mode survives, so re-check it on the way in.
+    ChoosePositionMode mode = ChoosePositionMode.get();
+    if (mode == ChoosePositionMode.Routing && !RoutingController.get().isWaitingPoiPick())
+    {
+      hidePositionChooser();
+      mode = ChoosePositionMode.None;
+    }
+
+    if (mode != ChoosePositionMode.None)
+    {
+      // Only the routing title is derived from state that outlives the view; Editor and Api use the layout default.
+      if (mode == ChoosePositionMode.Routing)
+        updatePositionChooserText(ChoosePositionMode.Routing);
+      UiUtils.show(mPointChooser);
+      mMapButtonsViewModel.setButtonsHidden(true);
+      mRoutingPlanViewModel.setIsPointChooserActive(true);
+    }
+    else if (isFullscreen())
+      setFullscreen(true);
+    else
+      exitFullscreen();
+    if (mOnmapDownloader != null)
+      mOnmapDownloader.onResume();
+
+    mNavigationController.refresh();
+    refreshLightStatusBar();
+
+    MwmApplication.from(this).getSensorHelper().addListener(this);
+    startViewportRotationPolling();
+  }
+
+  @Override
+  protected void onResumeFragments()
+  {
+    super.onResumeFragments();
+    RoutingController.get().restore();
+  }
+
+  @Override
+  protected void onPause()
+  {
+    if (mOnmapDownloader != null)
+      mOnmapDownloader.onPause();
+    MwmApplication.from(this).getSensorHelper().removeListener(this);
+    stopViewportRotationPolling();
+    dismissLocationErrorDialog();
+    dismissAlertDialog();
+    super.onPause();
+  }
+
+  @Override
+  protected void onStart()
+  {
+    RoutingController.get().attach(this);
+    super.onStart();
+
+    Framework.nativePlacePageActivationListener(this);
+    BookmarkManager.INSTANCE.addLoadingListener(this);
+    MwmApplication.from(getApplicationContext()).getIsolinesManager().attach(this::onIsolinesStateChanged);
+    updateDrivingOptionCount();
+    RoutingController.get().applyPendingRoutingOptions();
+    LocationState.nativeSetListener(this);
+    MwmApplication.from(this).getLocationHelper().addListener(this);
+    Utils.keepScreenOn(Config.isKeepScreenOnEnabled() || RoutingController.get().isNavigating(), getWindow());
+  }
+
+  @Override
+  protected void onStop()
+  {
+    super.onStop();
+
+    Framework.nativeRemovePlacePageActivationListener(this);
+    BookmarkManager.INSTANCE.removeLoadingListener(this);
+    MwmApplication.from(this).getLocationHelper().removeListener(this);
+    if (mDisplayManager.isDeviceDisplayUsed() && !RoutingController.get().isNavigating())
+      LocationState.nativeRemoveListener();
+    // Attached unconditionally in onStart()
+    RoutingController.get().detach();
+    MwmApplication.from(getApplicationContext()).getIsolinesManager().detach();
+    Utils.keepScreenOn(false, getWindow());
+
+    final String backUrl = Framework.nativeGetParsedBackUrl();
+    if (!TextUtils.isEmpty(backUrl))
+      Utils.openUri(this, Uri.parse(backUrl), null);
+  }
+
+  @CallSuper
+  @Override
+  protected void onSafeDestroy()
+  {
+    super.onSafeDestroy();
+    mLocationPermissionRequest.unregister();
+    mLocationPermissionRequest = null;
+    mLocationResolutionRequest.unregister();
+    mLocationResolutionRequest = null;
+    mPostNotificationPermissionRequest.unregister();
+    mPostNotificationPermissionRequest = null;
+    mPowerSaveSettings.unregister();
+    mPowerSaveSettings = null;
+    if (mRemoveDisplayListener && !isChangingConfigurations())
+      mDisplayManager.removeListener(DisplayType.Device);
+  }
+
+  @Override
+  public void onBackPressed()
+  {
+    if (!handleBackPress())
+    {
+      try
+      {
+        super.onBackPressed();
+      }
+      catch (IllegalStateException e)
+      {
+        // Sometimes this can be called after onSaveState() for unknown reason.
+      }
+    }
+  }
+
+  /** @return true if the back press was consumed by closing an open panel, menu, or route. */
+  @Override
+  public boolean handleBackPress()
+  {
+    final RoutingController routingController = RoutingController.get();
+    return (closeBottomSheet(MAIN_MENU_ID) || closeBottomSheet(LAYERS_MENU_ID) || collapseNavMenu() || closePlacePage()
+            || closePositionChooser() || closeSearchFragment() || routingController.resetToPlanningStateIfNavigating()
+            || routingController.cancel());
+  }
+
+  @Override
+  public void onPlacePageActivated(@NonNull PlacePageData data)
+  {
+    // This will open the place page
+    mPlacePageViewModel.setMapObject((MapObject) data);
+  }
+
+  @Override
+  public void onPlacePageDeactivated()
+  {
+    if (mPlacePageViewModel.getMapObject().getValue() == null
+        || mPlacePageViewModel.getMapObject().getValue().isTrackRecording())
+      return;
+    closePlacePage();
+  }
+
+  @Override
+  public void onSwitchFullScreenMode()
+  {
+    if (mSearchPageViewModel.getSearchEnabled().getValue() == Boolean.TRUE)
+      return;
+
+    if (isFullscreen())
+      exitFullscreen();
+    else
+      setFullscreen(true);
+
+    if (isFullscreen())
+    {
+      closePlacePage();
+      // Show the toast every time so that users don't forget and don't get trapped in the FS mode.
+      // TODO(pastk): there are better solutions, see https://github.com/organicmaps/organicmaps/issues/9344
+      Toast.makeText(this, R.string.long_tap_toast, Toast.LENGTH_LONG).show();
+    }
+  }
+
+  public void setFullscreen(boolean isFullscreen)
+  {
+    final RoutingController rc = RoutingController.get();
+    if (rc.isNavigating() || rc.isBuilding() || rc.isPlanning())
+      return;
+
+    mMapButtonsViewModel.setFullscreen(isFullscreen);
+    mMapButtonsViewModel.setButtonsHidden(isFullscreen);
+    UiUtils.setFullscreen(this, isFullscreen);
+  }
+
+  private void exitFullscreen()
+  {
+    mMapButtonsViewModel.setFullscreen(false);
+    mMapButtonsViewModel.setButtonsHidden(false);
+    UiUtils.setFullscreen(this, false);
+  }
+
+  private boolean isFullscreen()
+  {
+    return Boolean.TRUE.equals(mMapButtonsViewModel.getFullscreen().getValue());
+  }
+
+  // Light navigation-bar icons can only be requested from API 26 (O). Below that, a transparent bar
+  // would leave the default light icons invisible over a light map, so keep the system default there
+  // (EdgeToEdge's scrim). From API 26 the bar is transparent and its icons follow the theme.
+  private void makeNavigationBarTransparentInLightMode()
+  {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+      return;
+    final boolean isLightMode = !app.alhaswamagellan.sdk.util.Utils.isDarkMode(this);
+    final Window window = getWindow();
+    window.setNavigationBarColor(Color.TRANSPARENT);
+    new WindowInsetsControllerCompat(window, window.getDecorView()).setAppearanceLightNavigationBars(isLightMode);
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
+      window.setNavigationBarContrastEnforced(false);
+  }
+
+  @Override
+  public boolean dispatchGenericMotionEvent(MotionEvent event)
+  {
+    if (event.getActionMasked() == MotionEvent.ACTION_SCROLL)
+    {
+      int exponent = event.getAxisValue(MotionEvent.AXIS_VSCROLL) < 0 ? -1 : 1;
+      Map.onScale(Math.pow(1.7f, exponent), event.getX(), event.getY(), true);
+      return true;
+    }
+    return super.onGenericMotionEvent(event);
+  }
+
+  public void customOnNavigateUp()
+  {
+    // The map screen has no docked side panel to pop, so up-navigation is a no-op here.
+  }
+
+  void updateCompassOffset(int offsetY)
+  {
+    updateCompassOffset(offsetY, -1);
+  }
+
+  void updateCompassOffset(int offsetY, int offsetX)
+  {
+    mMapController.updateCompassOffset(offsetX, offsetY);
+
+    final double north = MwmApplication.from(this).getSensorHelper().getSavedNorth();
+    if (!Double.isNaN(north))
+      Map.onCompassUpdated(north, true);
+  }
+
+  /**
+   * Al-Haswa: Position C++ compass above the zoom buttons (bottom-right of screen).
+   * offsetY = bottom system bar height.
+   * The compass will be placed above zoom + my-position buttons.
+   */
+  void updateCompassOffsetBottom(int offsetY, int offsetX)
+  {
+    // Total height from bottom: nav bar + padding + my-position + margin + zoom_in + margin + zoom_out + margin +
+    // compass
+    final int navPadding = dimen(this, R.dimen.nav_frame_padding);
+    final int mapButtonSize = dimen(this, R.dimen.map_button_size);
+    final int marginHalf = dimen(this, R.dimen.margin_half);
+    // my-position button
+    int totalOffset = offsetY + navPadding + mapButtonSize;
+    // gap between my-position and zoom
+    totalOffset += marginHalf;
+    // zoom_in button
+    totalOffset += mapButtonSize;
+    // gap between zoom_in and zoom_out
+    totalOffset += marginHalf;
+    // zoom_out button
+    totalOffset += mapButtonSize;
+    // gap between zoom_out and compass
+    totalOffset += marginHalf;
+    // This is the distance from the bottom of the screen to the center of the compass
+    mMapController.updateCompassOffset(offsetX < 0 ? -1 : offsetX, totalOffset);
+
+    final double north = MwmApplication.from(this).getSensorHelper().getSavedNorth();
+    if (!Double.isNaN(north))
+      Map.onCompassUpdated(north, true);
+  }
+
+  public void onMapBottomButtonsHeightChange(float height)
+  {
+    updateBottomWidgetsOffset();
+  }
+
+  public void updateBottomWidgetsOffset()
+  {
+    updateBottomWidgetsOffset(-1);
+  }
+
+  public void updateBottomWidgetsOffset(int offsetX)
+  {
+    int offsetY = mNavBarHeight;
+    final Float bottomButtonHeight = mMapButtonsViewModel.getBottomButtonsHeight().getValue();
+    if (bottomButtonHeight != null)
+      offsetY = Math.max(offsetY, bottomButtonHeight.intValue() + mNavBarHeight);
+    final View navBottomSheetLineFrame = findViewById(R.id.line_frame);
+    final View navBottomSheetNavBar = findViewById(R.id.nav_bottom_sheet_nav_bar);
+    if (navBottomSheetLineFrame != null)
+      offsetY = Math.max(offsetY, navBottomSheetLineFrame.getHeight() + navBottomSheetNavBar.getHeight());
+    if (mDisplayManager.isDeviceDisplayUsed())
+    {
+      mMapController.updateBottomWidgetsOffset(offsetX, offsetY);
+      mMapController.updateMyPositionRoutingOffset(offsetY);
+    }
+  }
+
+  @Override
+  public void updateMenu()
+  {
+    final RoutingController controller = RoutingController.get();
+
+    if (controller.isNavigating())
+    {
+      mNavigationController.show(true);
+      mMapButtonsViewModel.setBottomButtonsHidden(true);
+      return;
+    }
+
+    if (controller.isPlanning())
+    {
+      mMapButtonsViewModel.setBottomButtonsHidden(true);
+      if (getSupportFragmentManager().findFragmentByTag(RoutingPlanFragment.TAG) == null)
+      {
+        setRoutingBottomSheetActive(true);
+        return;
+      }
+      mRoutingPlanViewModel.triggerMenuUpdate();
+    }
+    else
+    {
+      mMapButtonsViewModel.setBottomButtonsHidden(false);
+    }
+  }
+
+  public void setRoutingBottomSheetActive(boolean active)
+  {
+    final FragmentManager fm = getSupportFragmentManager();
+    if (active)
+    {
+      if (fm.findFragmentByTag(RoutingPlanFragment.TAG) == null)
+      {
+        fm.beginTransaction()
+            .replace(R.id.routing_container, new RoutingPlanFragment(), RoutingPlanFragment.TAG)
+            .commitNowAllowingStateLoss();
+        updateMenu();
+      }
+    }
+    else
+    {
+      Fragment fragment = fm.findFragmentByTag(RoutingPlanFragment.TAG);
+      if (fragment != null)
+      {
+        fm.beginTransaction().remove(fragment).commitNowAllowingStateLoss();
+      }
+    }
+  }
+
+  @Override
+  public void showRoutePlan(boolean show, @Nullable Runnable completionListener)
+  {
+    if (show)
+    {
+      setRoutingBottomSheetActive(true);
+      if (completionListener != null)
+        completionListener.run();
+    }
+    else
+    {
+      setRoutingBottomSheetActive(false);
+      mRoutingPlanViewModel.setShowRoutingBottomSheet(false);
+      if (completionListener != null)
+        completionListener.run();
+    }
+  }
+
+  @Override
+  public void showNavigation(boolean show)
+  {
+    // TODO:
+    // mPlacePage.refreshViews();
+    mNavigationController.show(show);
+    if (mOnmapDownloader != null)
+      mOnmapDownloader.updateState(false);
+  }
+
+  @Override
+  public void updateBuildProgress(int progress, Router router)
+  {
+    mRoutingPlanViewModel.setBuildProgress(progress, router.ordinal());
+  }
+
+  @Override
+  public void onStartRouteBuilding()
+  {
+    Fragment fragment = getSupportFragmentManager().findFragmentByTag(RoutingPlanFragment.TAG);
+    if (fragment instanceof RoutingPlanFragment plan)
+      plan.onBuildStarted();
+  }
+
+  @Override
+  public void onNavigationCancelled()
+  {
+    closeFloatingToolbarsAndPanels();
+    ThemeSwitcher.INSTANCE.synchronizeApplicationTheme();
+    ThemeSwitcher.INSTANCE.synchronizeMapStyle(this, mMapController.isRenderingActive());
+    NavigationService.stopService(this);
+    mMapButtonsViewModel.setSearchOption(null);
+    mMapButtonsViewModel.setLayoutMode(MapButtonsController.LayoutMode.regular);
+    refreshLightStatusBar();
+    Utils.keepScreenOn(Config.isKeepScreenOnEnabled(), getWindow());
+  }
+
+  private void restoreRoutingUI(@NonNull MapButtonsController.LayoutMode layoutMode)
+  {
+    if (layoutMode == MapButtonsController.LayoutMode.navigation)
+    {
+      ThemeSwitcher.INSTANCE.synchronizeApplicationTheme();
+      ThemeSwitcher.INSTANCE.synchronizeMapStyle(this, mMapController.isRenderingActive());
+      Utils.keepScreenOn(true, getWindow());
+    }
+    mMapButtonsViewModel.setLayoutMode(layoutMode);
+    refreshLightStatusBar();
+  }
+
+  @Override
+  public void onNavigationStarted()
+  {
+    closeFloatingToolbarsAndPanels();
+    ThemeSwitcher.INSTANCE.synchronizeApplicationTheme();
+    ThemeSwitcher.INSTANCE.synchronizeMapStyle(this, mMapController.isRenderingActive());
+    mMapButtonsViewModel.setLayoutMode(MapButtonsController.LayoutMode.navigation);
+    refreshLightStatusBar();
+
+    // Don't start the background navigation service without fine location.
+    if (!LocationUtils.checkFineLocationPermission(this))
+    {
+      Logger.w(LOCATION_TAG, "Permission ACCESS_FINE_LOCATION is not granted, skipping NavigationService");
+      return;
+    }
+
+    requestPostNotificationsPermission();
+    NavigationService.startForegroundService(this);
+    Utils.keepScreenOn(true, getWindow());
+  }
+
+  @Override
+  public void onPlanningCancelled()
+  {
+    closeFloatingToolbarsAndPanels();
+    mMapButtonsViewModel.setLayoutMode(MapButtonsController.LayoutMode.regular);
+    refreshLightStatusBar();
+  }
+
+  @Override
+  public void onPlanningStarted()
+  {
+    closeFloatingToolbarsAndPanels();
+    mMapButtonsViewModel.setLayoutMode(MapButtonsController.LayoutMode.planning);
+    refreshLightStatusBar();
+  }
+
+  @Override
+  public void onResetToPlanningState()
+  {
+    closeFloatingToolbarsAndPanels();
+    ThemeSwitcher.INSTANCE.synchronizeApplicationTheme();
+    ThemeSwitcher.INSTANCE.synchronizeMapStyle(this, mMapController.isRenderingActive());
+    NavigationService.stopService(this);
+    mMapButtonsViewModel.setSearchOption(null);
+    mMapButtonsViewModel.setLayoutMode(MapButtonsController.LayoutMode.planning);
+    refreshLightStatusBar();
+  }
+
+  @Override
+  public void onAddedStop()
+  {
+    forceCloseSearchFragment();
+    closePlacePage();
+  }
+
+  @Override
+  public void onRemovedStop()
+  {
+    forceCloseSearchFragment();
+    closePlacePage();
+  }
+
+  @Override
+  public void onStopPointLimitReached()
+  {
+    Toast.makeText(this, R.string.routing_max_stops_reached, Toast.LENGTH_LONG).show();
+  }
+
+  @Override
+  public void onPoiPickCompleted()
+  {
+    forceCloseSearchFragment();
+    closePlacePage();
+  }
+
+  @Override
+  public void onBuiltRoute()
+  {}
+
+  @Override
+  public void onCommonBuildError(int lastResultCode, @NonNull String[] lastMissingMaps)
+  {
+    RoutingErrorDialogFragment fragment = RoutingErrorDialogFragment.create(
+        getSupportFragmentManager().getFragmentFactory(), getApplicationContext(), lastResultCode, lastMissingMaps);
+    fragment.show(getSupportFragmentManager(), RoutingErrorDialogFragment.class.getSimpleName());
+  }
+
+  @Override
+  public void onDrivingOptionsBuildError()
+  {
+    mRoutingPlanViewModel.triggerDrivingOptionsError();
+  }
+  @Override
+  public void onDrivingOptionsWarning()
+  {
+    // The route built, but the engine flagged roads the user may want to avoid (tolls, ferries, etc.).
+    Logger.i(TAG, "Driving options warning: the built route uses roads that could be avoided");
+  }
+
+  public boolean showRoutingDisclaimer()
+  {
+    if (Config.isRoutingDisclaimerAccepted())
+      return true;
+
+    final StringBuilder builder = new StringBuilder();
+    for (int resId :
+         new int[] {R.string.dialog_routing_disclaimer_priority, R.string.dialog_routing_disclaimer_precision,
+                    R.string.dialog_routing_disclaimer_recommendations, R.string.dialog_routing_disclaimer_borders,
+                    R.string.dialog_routing_disclaimer_beware})
+      builder.append(getString(resId)).append("\n\n");
+
+    dismissAlertDialog();
+    mAlertDialog = new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+                       .setTitle(R.string.dialog_routing_disclaimer_title)
+                       .setMessage(builder.toString())
+                       .setCancelable(false)
+                       .setNegativeButton(R.string.decline, null)
+                       .setPositiveButton(R.string.accept,
+                                          (dlg, which) -> {
+                                            Config.acceptRoutingDisclaimer();
+                                            closeFloatingPanels();
+                                            setFullscreen(false);
+                                            RoutingController.get().start();
+                                          })
+                       .setOnDismissListener(dialog -> mAlertDialog = null)
+                       .show();
+
+    return false;
+  }
+
+  @Override
+  public boolean showStartPointNotice()
+  {
+    final RoutingController controller = RoutingController.get();
+
+    // S - start, F - finish, L - my position
+    // -S-F-L -> Start
+    // -S-F+L -> Finish
+    // -S+F-L -> Start
+    // -S+F+L -> Start + Use
+    // +S-F-L -> Finish
+    // +S-F+L -> Finish
+    // +S+F-L -> Hide
+    // +S+F+L -> Hide
+    final MapObject myPosition = MwmApplication.from(this).getLocationHelper().getMyPosition();
+    if (myPosition != null && controller.getEndPoint() == null)
+      return false;
+    if (controller.getStartPoint() == null)
+      return false;
+    if (controller.getEndPoint() == null)
+      return false;
+
+    final MapObject startPoint = Objects.requireNonNull(controller.getStartPoint());
+    if (startPoint.isMyPosition())
+      return true;
+
+    final MapObject endPoint = Objects.requireNonNull(controller.getEndPoint());
+    final MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+        .setTitle(R.string.p2p_only_from_current)
+        .setMessage(R.string.p2p_reroute_from_current)
+        .setCancelable(false)
+        .setNegativeButton(R.string.cancel, null)
+        .setPositiveButton(R.string.ok, endPoint.isMyPosition() ?
+            (dialog, which) -> controller.swapPoints() :
+            (dialog, which) -> {
+              // The current location may change while this dialog is still shown on the screen.
+              controller.setStartPoint(myPosition);
+            }
+        )
+        .setOnDismissListener(dialog -> mAlertDialog = null);
+    dismissAlertDialog();
+    mAlertDialog = builder.show();
+    return false;
+  }
+
+  @Override
+  public void onMyPositionModeChanged(int newMode)
+  {
+    Logger.d(LOCATION_TAG, "newMode = " + LocationState.nameOf(newMode));
+    mMapButtonsViewModel.setMyPositionMode(newMode);
+    RoutingController controller = RoutingController.get();
+    if (controller.isPlanning() || controller.isBuilding() || controller.isErrorEncountered())
+      mRoutingPlanViewModel.triggerMenuUpdate();
+
+    final LocationHelper locationHelper = MwmApplication.from(this).getLocationHelper();
+
+    // Check if location was disabled by the user.
+    if (LocationState.getMode() == LocationState.NOT_FOLLOW_NO_POSITION)
+    {
+      Logger.i(LOCATION_TAG, "Location updates are stopped by the user manually.");
+      if (locationHelper.isActive())
+        locationHelper.stop();
+      return;
+    }
+
+    // Check for any location permissions.
+    if (!LocationUtils.checkLocationPermission(this))
+    {
+      Logger.w(LOCATION_TAG, "Permissions ACCESS_COARSE_LOCATION and ACCESS_FINE_LOCATION are not granted");
+      // Calls onMyPositionModeChanged(NOT_FOLLOW_NO_POSITION).
+      LocationState.nativeOnLocationError(LocationState.ERROR_DENIED);
+
+      Logger.i(LOCATION_TAG, "Requesting ACCESS_FINE_LOCATION + ACCESS_FINE_LOCATION permissions");
+      dismissLocationErrorDialog();
+      mLocationPermissionRequest.launch(new String[] {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION});
+      return;
+    }
+
+    locationHelper.restartWithNewMode();
+
+    if ((newMode == FOLLOW || newMode == FOLLOW_AND_ROTATE) && !LocationUtils.checkFineLocationPermission(this))
+    {
+      // Try to optimistically request FINE permission for FOLLOW and FOLLOW_AND_ROTATE modes.
+      Logger.i(LOCATION_TAG, "Requesting ACCESS_FINE_LOCATION permission for " + LocationState.nameOf(newMode));
+      dismissLocationErrorDialog();
+      mLocationPermissionRequest.launch(new String[] {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION});
+    }
+  }
+
+  /**
+   * Dismiss the active modal dialog from the screen, if any.
+   */
+  private void dismissAlertDialog()
+  {
+    if (mAlertDialog != null && mAlertDialog.isShowing())
+      mAlertDialog.dismiss();
+    mAlertDialog = null;
+  }
+
+  /**
+   * Dismiss location error dialog from the screen, if any.
+   */
+  private void dismissLocationErrorDialog()
+  {
+    if (mLocationErrorDialog != null && mLocationErrorDialog.isShowing())
+      mLocationErrorDialog.dismiss();
+    mLocationErrorDialog = null;
+  }
+
+  /**
+   * Called when location is updated.
+   * @param location new location
+   */
+  @Override
+  @UiThread
+  public void onLocationUpdated(@NonNull Location location)
+  {
+    dismissLocationErrorDialog();
+
+    final RoutingController routing = RoutingController.get();
+    if (!routing.isNavigating())
+      return;
+
+    mNavigationController.update(Framework.nativeGetRouteFollowingInfo());
+  }
+
+  @Override
+  @UiThread
+  public void onLocationUpdateTimeout()
+  {
+    requestBatterySaverPermission();
+  }
+
+  /**
+   * Called when compass data is updated.
+   * @param north offset from the north
+   */
+  private void startViewportRotationPolling()
+  {
+    if (mViewportPollHandler != null)
+      return;
+    mViewportPollHandler = new Handler(Looper.getMainLooper());
+    mViewportPollRunnable = new Runnable() {
+      @Override
+      public void run()
+      {
+        // Al-Haswa: north button removed, C++ compass rotates automatically
+        // No need to update any Android button rotation
+        if (mViewportPollHandler != null)
+          mViewportPollHandler.postDelayed(this, VIEWPORT_POLL_INTERVAL_MS);
+      }
+    };
+    mViewportPollHandler.postDelayed(mViewportPollRunnable, VIEWPORT_POLL_INTERVAL_MS);
+  }
+
+  private void stopViewportRotationPolling()
+  {
+    if (mViewportPollHandler != null)
+    {
+      mViewportPollHandler.removeCallbacks(mViewportPollRunnable);
+      mViewportPollHandler = null;
+      mViewportPollRunnable = null;
+    }
+  }
+
+  @Override
+  @UiThread
+  public void onCompassUpdated(double north)
+  {
+    Map.onCompassUpdated(north, false);
+    MapButtonsController mbc = (MapButtonsController) getSupportFragmentManager().findFragmentById(R.id.map_buttons);
+    if (mbc != null)
+      mbc.updateNorthButtonVisibility(Math.toDegrees(north));
+  }
+
+  @Override
+  @UiThread
+  public void onCompassCalibrationRecommended()
+  {
+    Toast.makeText(this, getString(R.string.compass_calibration_recommended), Toast.LENGTH_LONG).show();
+  }
+
+  @Override
+  @UiThread
+  public void onCompassCalibrationRequired()
+  {
+    Toast.makeText(this, getString(R.string.compass_calibration_required), Toast.LENGTH_LONG).show();
+  }
+
+  /**
+   * Request POST_NOTIFICATIONS permission.
+   */
+  public void requestPostNotificationsPermission()
+  {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+        || ActivityCompat.checkSelfPermission(this, POST_NOTIFICATIONS) == PERMISSION_GRANTED)
+    {
+      Logger.i(TAG, "Permissions POST_NOTIFICATIONS is granted");
+      return;
+    }
+
+    Logger.i(TAG, "Requesting POST_NOTIFICATIONS permission");
+    mPostNotificationPermissionRequest.launch(POST_NOTIFICATIONS);
+  }
+
+  /**
+   * Called on the result of the system location dialog.
+   * @param permissions permissions granted or refused.
+   */
+  @UiThread
+  private void onLocationPermissionsResult(java.util.Map<String, Boolean> permissions)
+  {
+    // Print permissions that have been granted or refused.
+    for (java.util.Map.Entry<String, Boolean> entry : permissions.entrySet())
+    {
+      final String permission = entry.getKey().substring(entry.getKey().lastIndexOf('.') + 1);
+      if (entry.getValue())
+        Logger.i(LOCATION_TAG, "Permission " + permission + " has been granted");
+      else
+        Logger.w(LOCATION_TAG, "Permission " + permission + " has been refused");
+    }
+
+    boolean requestedForRecording = mLocationPermissionRequestedForRecording;
+    mLocationPermissionRequestedForRecording = false;
+    if (LocationUtils.checkLocationPermission(this))
+    {
+      final boolean hasFineLocationPermission = LocationUtils.checkFineLocationPermission(this);
+
+      if (LocationState.getMode() == LocationState.NOT_FOLLOW_NO_POSITION)
+        LocationState.nativeSwitchToNextMode();
+
+      if (requestedForRecording && hasFineLocationPermission)
+        startTrackRecording();
+
+      if (hasFineLocationPermission)
+      {
+        Logger.i(LOCATION_TAG, "ACCESS_FINE_LOCATION permission granted");
+      }
+      else
+      {
+        Logger.w(LOCATION_TAG, "Only ACCESS_COARSE_LOCATION permission granted");
+        if (mLocationErrorDialog != null && mLocationErrorDialog.isShowing())
+        {
+          Logger.w(LOCATION_TAG, "Don't show 'Precise Location denied' dialog because another dialog is in progress");
+          return;
+        }
+        if (!mPreciseLocationDialogShown)
+        {
+          mPreciseLocationDialogShown = true;
+          final MaterialAlertDialogBuilder builder =
+              new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+                  .setTitle("⚠ " + getString(R.string.limited_accuracy))
+                  .setMessage(R.string.precise_location_is_disabled_long_text)
+                  .setNegativeButton(R.string.close, (dialog, which) -> dialog.dismiss())
+                  .setCancelable(true)
+                  .setOnDismissListener(dialog -> mLocationErrorDialog = null);
+          final Intent intent = Utils.makeSystemLocationSettingIntent(this);
+          if (intent != null)
+          {
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+            builder.setPositiveButton(R.string.location_settings, (dialog, which) -> startActivity(intent));
+          }
+          mLocationErrorDialog = builder.show();
+        }
+        else
+        {
+          Toast.makeText(this, R.string.precise_location_is_disabled_long_text, Toast.LENGTH_LONG).show();
+        }
+      }
+      return;
+    }
+
+    Logger.w(LOCATION_TAG, "Permissions ACCESS_COARSE_LOCATION and ACCESS_FINE_LOCATION have been refused");
+    // Calls onMyPositionModeChanged(NOT_FOLLOW_NO_POSITION).
+    LocationState.nativeOnLocationError(LocationState.ERROR_DENIED);
+
+    if (mLocationErrorDialog != null && mLocationErrorDialog.isShowing())
+    {
+      Logger.w(LOCATION_TAG, "Don't show 'location denied' error dialog because another dialog is in progress");
+      return;
+    }
+
+    mLocationErrorDialog = new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+                               .setTitle(R.string.enable_location_services)
+                               .setMessage(R.string.location_is_disabled_long_text)
+                               .setOnDismissListener(dialog -> mLocationErrorDialog = null)
+                               .setNegativeButton(R.string.close, null)
+                               .show();
+  }
+
+  /**
+   * Called on the result of the POST_NOTIFICATIONS request.
+   * @param granted true if permission has been granted.
+   */
+  @UiThread
+  private void onPostNotificationPermissionResult(boolean granted)
+  {
+    if (granted)
+      Logger.i(TAG, "Permission POST_NOTIFICATIONS has been granted");
+    else
+      Logger.w(TAG, "Permission POST_NOTIFICATIONS has been refused");
+  }
+
+  @UiThread
+  private void onPowerSaveResult(@NonNull ActivityResult result)
+  {
+    if (!PowerManagment.isSystemPowerSaveMode(this))
+      Logger.i(POWER_MANAGEMENT_TAG, "Power Save mode has been disabled on the device");
+    else
+      Logger.w(POWER_MANAGEMENT_TAG, "Power Save mode wasn't disabled on the device");
+  }
+
+  /**
+   * Called by GoogleFusedLocationProvider to request to GPS and/or Wi-Fi.
+   * @param pendingIntent an intent to launch.
+   */
+  @Override
+  @UiThread
+  public void onLocationResolutionRequired(@NonNull PendingIntent pendingIntent)
+  {
+    Logger.d(LOCATION_TAG);
+
+    // Cancel our dialog in favor of system dialog.
+    dismissLocationErrorDialog();
+
+    // Launch system permission resolution dialog.
+    Logger.i(LOCATION_TAG, "Starting location resolution dialog");
+    IntentSenderRequest intentSenderRequest = new IntentSenderRequest.Builder(pendingIntent.getIntentSender()).build();
+    mLocationResolutionRequest.launch(intentSenderRequest);
+  }
+
+  /**
+   * Triggered by onLocationResolutionRequired().
+   * @param result invocation result.
+   */
+  @UiThread
+  private void onLocationResolutionResult(@NonNull ActivityResult result)
+  {
+    final int resultCode = result.getResultCode();
+    Logger.d(LOCATION_TAG, "resultCode = " + resultCode);
+
+    if (resultCode != Activity.RESULT_OK)
+    {
+      Logger.w(LOCATION_TAG, "Location resolution has been refused");
+      // Calls onMyPositionModeChanged(NOT_FOLLOW_NO_POSITION).
+      LocationState.nativeOnLocationError(LocationState.ERROR_GPS_OFF);
+      return;
+    }
+
+    Logger.i(LOCATION_TAG, "Location resolution has been granted, restarting location");
+    if (LocationState.getMode() == LocationState.NOT_FOLLOW_NO_POSITION)
+    {
+      // Calls onMyPositionModeChanged(PENDING_POSITION).
+      LocationState.nativeSwitchToNextMode();
+    }
+  }
+
+  /**
+   * Called by AndroidNativeLocationProvider when no suitable location methods are available.
+   */
+  @Override
+  @UiThread
+  public void onLocationDisabled()
+  {
+    Logger.d(LOCATION_TAG, "settings = " + LocationUtils.areLocationServicesTurnedOn(this));
+
+    // Calls onMyPositionModeChanged(NOT_FOLLOW_NO_POSITION).
+    LocationState.nativeOnLocationError(LocationState.ERROR_GPS_OFF);
+
+    if (mLocationErrorDialog != null && mLocationErrorDialog.isShowing())
+    {
+      Logger.d(LOCATION_TAG, "Don't show 'location disabled' error dialog because another dialog is in progress");
+      return;
+    }
+
+    final MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+                                                   .setTitle(R.string.enable_location_services)
+                                                   .setMessage(R.string.location_is_disabled_long_text)
+                                                   .setOnDismissListener(dialog -> mLocationErrorDialog = null)
+                                                   .setNegativeButton(R.string.close, null);
+    final Intent intent = Utils.makeSystemLocationSettingIntent(this);
+    if (intent != null)
+    {
+      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      intent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+      intent.addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS);
+      builder.setPositiveButton(R.string.location_settings, (dialog, which) -> startActivity(intent));
+    }
+    mLocationErrorDialog = builder.show();
+  }
+
+  private boolean requestBatterySaverPermission()
+  {
+    if (!PowerManagment.isSystemPowerSaveMode(this))
+    {
+      Logger.i(POWER_MANAGEMENT_TAG, "Power Save mode is disabled on the device");
+      return true;
+    }
+    Logger.w(POWER_MANAGEMENT_TAG, "Power Save mode is enabled on the device");
+
+    if (mPowerSaveDisclaimerShown)
+    {
+      Logger.i(POWER_MANAGEMENT_TAG, "The Power Save disclaimer has been already shown in this session");
+      return true;
+    }
+
+    // TODO (rtsisyk): re-enable this new dialog for all cases after testing on the track recorder.
+    if (!TrackRecorder.nativeIsTrackRecordingEnabled())
+      return true;
+
+    final Intent intent = PowerManagment.makeSystemPowerSaveSettingIntent(this);
+    if (intent == null)
+    {
+      Logger.w(POWER_MANAGEMENT_TAG, "No known way to launch the system Power Save settings");
+      return true;
+    }
+
+    dismissAlertDialog();
+    final MaterialAlertDialogBuilder builder =
+        new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+            .setTitle(R.string.current_location_unknown_error_title)
+            .setCancelable(true)
+            .setMessage(R.string.power_save_dialog_summary)
+            .setNegativeButton(R.string.not_now,
+                               (dialog, which) -> {
+                                 Logger.d(POWER_MANAGEMENT_TAG, "The Power Save disclaimer was ignored");
+                                 mPowerSaveDisclaimerShown = true;
+                               })
+            .setOnDismissListener(dialog -> mAlertDialog = null)
+            .setPositiveButton(R.string.settings, (dlg, which) -> {
+              Logger.d(POWER_MANAGEMENT_TAG, "Launching the system Power Save settings");
+              mPowerSaveDisclaimerShown = true;
+              mPowerSaveSettings.launch(intent);
+            });
+    Logger.d(POWER_MANAGEMENT_TAG, "Displaying the Power Save disclaimer");
+    mAlertDialog = builder.show();
+    return false;
+  }
+
+  @Override
+  public void onBookmarksFileUnsupported(@NonNull Uri uri)
+  {
+    dismissAlertDialog();
+    mAlertDialog =
+        new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+            .setTitle(R.string.load_kmz_title)
+            .setMessage(getString(R.string.unknown_file_type, uri))
+            .setPositiveButton(R.string.ok, null)
+            .setNegativeButton(R.string.report_a_bug,
+                               (dialog, which)
+                                   -> Utils.sendBugReport(mShareLauncher, this, getString(R.string.load_kmz_title),
+                                                          getString(R.string.unknown_file_type, uri)))
+            .setOnDismissListener(dialog -> mAlertDialog = null)
+            .show();
+  }
+
+  @Override
+  public void onBookmarksFileDownloadFailed(@NonNull Uri uri, @NonNull String error)
+  {
+    dismissAlertDialog();
+    mAlertDialog =
+        new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+            .setTitle(R.string.load_kmz_title)
+            .setMessage(getString(R.string.failed_to_open_file, uri, error))
+            .setPositiveButton(R.string.ok, null)
+            .setNegativeButton(R.string.report_a_bug,
+                               (dialog, which)
+                                   -> Utils.sendBugReport(mShareLauncher, this, getString(R.string.load_kmz_title),
+                                                          getString(R.string.failed_to_open_file, uri, error)))
+            .setOnDismissListener(dialog -> mAlertDialog = null)
+            .show();
+  }
+
+  @Override
+  public void onBookmarksFileImportSuccessful()
+  {
+    Utils.showSnackbar(this, findViewById(R.id.coordinator), R.string.load_kmz_successful);
+  }
+
+  @Override
+  public void onBookmarksFileImportFailed()
+  {
+    dismissAlertDialog();
+    mAlertDialog = new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+                       .setTitle(R.string.load_kmz_title)
+                       .setMessage(R.string.load_kmz_failed)
+                       .setPositiveButton(R.string.ok, null)
+                       .setOnDismissListener(dialog -> mAlertDialog = null)
+                       .show();
+  }
+
+  @Override
+  public boolean onKeyUp(int keyCode, KeyEvent event)
+  {
+    switch (keyCode)
+    {
+    case KeyEvent.KEYCODE_DPAD_DOWN: Map.zoomOut(); return true;
+    case KeyEvent.KEYCODE_DPAD_UP: Map.zoomIn(); return true;
+    case KeyEvent.KEYCODE_ESCAPE:
+      final Intent currIntent = getIntent();
+      final String backUrl = Framework.nativeGetParsedBackUrl();
+      if (TextUtils.isEmpty(backUrl) || (currIntent != null && Factory.isStartedForApiResult(currIntent)))
+      {
+        finish();
+        return true;
+      }
+      return super.onKeyUp(keyCode, event);
+    default: return super.onKeyUp(keyCode, event);
+    }
+  }
+
+  public void onAddPlaceOptionSelected()
+  {
+    closeFloatingPanels();
+    showPositionChooserForEditor(false, false);
+  }
+
+  public void onDownloadMapsOptionSelected()
+  {
+    RoutingController.get().cancel();
+    closeFloatingPanels();
+    showDownloader(false);
+  }
+
+  public void onDonateOptionSelected()
+  {
+    Utils.openUrl(this, mDonatesUrl);
+    Framework.nativeDidShowDonationPage();
+  }
+
+  public void onSettingsOptionSelected()
+  {
+    Intent intent = new Intent(this, SettingsActivity.class);
+    closeFloatingPanels();
+    startActivity(intent);
+  }
+
+  private void openVoiceInstructionsSettings()
+  {
+    SettingsActivity.startForVoiceInstructions(this);
+  }
+
+  private boolean startTrackRecording()
+  {
+    if (!LocationUtils.checkFineLocationPermission(this))
+    {
+      Logger.i(TAG, "Location permission not granted");
+      // This variable is a simple hack to re initiate the flow
+      // according to action of user. Calling it hack because we are avoiding
+      // creation of new methods by using this variable.
+      mLocationPermissionRequestedForRecording = true;
+      mLocationPermissionRequest.launch(new String[] {ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION});
+      return false;
+    }
+
+    requestPostNotificationsPermission();
+
+    if (mCurrentWindowInsets != null)
+    {
+      final int offsetBottom = mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+      final int offsetRight = mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).right;
+      // Al-Haswa: compass above zoom + track recording indicator
+      final int mapButtonSize = dimen(this, R.dimen.map_button_size);
+      updateCompassOffsetBottom(offsetBottom + mapButtonSize, offsetRight);
+    }
+    Toast.makeText(this, R.string.track_recording, Toast.LENGTH_SHORT).show();
+    TrackRecordingService.startForegroundService(getApplicationContext());
+    mMapButtonsViewModel.setTrackRecorderState(true);
+    return true;
+  }
+
+  private void stopTrackRecording()
+  {
+    if (mCurrentWindowInsets != null)
+    {
+      final int offsetBottom = mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+      final int offsetRight = mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).right;
+      updateCompassOffsetBottom(offsetBottom, offsetRight);
+    }
+    // Reset the state before stopping the service: its observer re-enters this method while the state is on.
+    mMapButtonsViewModel.setTrackRecorderState(false);
+    TrackRecordingService.stopService(getApplicationContext());
+    closeBottomSheet(MAIN_MENU_ID);
+    if (mPlacePageViewModel.getMapObject().getValue() != null
+        && mPlacePageViewModel.getMapObject().getValue().isTrackRecording())
+      closePlacePage();
+  }
+
+  private void saveAndStopTrackRecording()
+  {
+    TrackRecorder.saveAndStop();
+    stopTrackRecording();
+  }
+
+  private void onTrackRecordingOptionSelected()
+  {
+    if (TrackRecorder.nativeIsTrackRecordingEnabled())
+      toggleTrackRecordingPP();
+    else
+      startTrackRecording();
+  }
+
+  private void toggleTrackRecordingPP()
+  {
+    if (mPlacePageViewModel.getMapObject().getValue() != null
+        && mPlacePageViewModel.getMapObject().getValue().isTrackRecording())
+      mPlacePageViewModel.setMapObject(null);
+    else
+    {
+      String title = StringUtils.nativeFormatDistance(0).toString(this) + " • "
+                   + Utils.formatRoutingTime(this, 0, R.dimen.text_size_body_3);
+      mPlacePageViewModel.setMapObject(new TrackRecording(title, getString(R.string.track_recording_title)));
+    }
+  }
+
+  public void onShareLocationOptionSelected()
+  {
+    closeFloatingPanels();
+    shareMyLocation();
+  }
+
+  @Override
+  @Nullable
+  public ArrayList<MenuBottomSheetItem> getMenuBottomSheetItems(String id)
+  {
+    if (id.equals(MAIN_MENU_ID))
+    {
+      ArrayList<MenuBottomSheetItem> items = new ArrayList<>();
+      items.add(new MenuBottomSheetItem(R.string.placepage_add_place_button, R.drawable.ic_plus,
+                                        this::onAddPlaceOptionSelected));
+      items.add(new MenuBottomSheetItem(R.string.download_maps, R.drawable.ic_download, getDownloadMapsCounter(),
+                                        this::onDownloadMapsOptionSelected));
+      mDonatesUrl = Utils.getDonateUrl(getApplicationContext());
+      if (!TextUtils.isEmpty(mDonatesUrl))
+        items.add(new MenuBottomSheetItem(R.string.donate, R.drawable.ic_donate, this::onDonateOptionSelected));
+      items.add(new MenuBottomSheetItem(R.string.settings, R.drawable.ic_settings, this::onSettingsOptionSelected));
+      items.add(new MenuBottomSheetItem(R.string.start_track_recording, R.drawable.ic_track_recording_off, -1,
+                                        this::onTrackRecordingOptionSelected));
+      items.add(new MenuBottomSheetItem(R.string.share_my_location, R.drawable.ic_share,
+                                        this::onShareLocationOptionSelected));
+      return items;
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
+  public Fragment getMenuBottomSheetFragment(String id)
+  {
+    if (id.equals(LAYERS_MENU_ID))
+      return new ToggleMapLayerFragment();
+    return null;
+  }
+
+  @Override
+  public void onPlacePageRequestToggleRouteSettings(@NonNull RoadType roadType)
+  {
+    forceCloseSearchFragment();
+    closePlacePage();
+    RoutingOptions.addOption(roadType);
+    rebuildLastRoute();
+    updateDrivingOptionCount();
+  }
+
+  @Override
+  public void onTrackRecordingSaved()
+  {
+    saveAndStopTrackRecording();
+  }
+
+  public void onTrackRecordingCancelled()
+  {
+    stopTrackRecording();
+  }
+
+  @Override
+  public void onPlacePageActiveChanged(boolean active)
+  {
+    mRoutingPlanViewModel.setIsPlacePageActive(active);
+  }
+
+  @Override
+  public void onTrimMemory(int level)
+  {
+    super.onTrimMemory(level);
+
+    Logger.d(TAG, "Trim memory, level = " + level);
+    if (level >= TRIM_MEMORY_RUNNING_LOW && level != TRIM_MEMORY_UI_HIDDEN)
+      Framework.nativeMemoryWarning();
+  }
+
+  private void reportUnsupported()
+  {
+    new MaterialAlertDialogBuilder(this, R.style.MwmTheme_AlertDialog)
+        .setMessage(R.string.unsupported_phone)
+        .setCancelable(false)
+        .setPositiveButton(R.string.close, (dlg, which) -> this.moveTaskToBack(true))
+        .show();
+  }
+}

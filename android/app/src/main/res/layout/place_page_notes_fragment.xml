@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<app.organicmaps.widget.placepage.sections.ExpandableNotesView
+<app.alhaswamagellan.widget.placepage.sections.ExpandableNotesView
   xmlns:android="http://schemas.android.com/apk/res/android"
   android:id="@+id/place_page_notes_layout"
   android:layout_width="match_parent"

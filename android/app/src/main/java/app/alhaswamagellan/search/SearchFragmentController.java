@@ -1,0 +1,410 @@
+package app.alhaswamagellan.search;
+
+import android.annotation.SuppressLint;
+import android.graphics.Outline;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
+import android.widget.FrameLayout;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import app.alhaswamagellan.MwmActivity;
+import app.alhaswamagellan.R;
+import app.alhaswamagellan.maplayer.MapButtonsViewModel;
+import app.alhaswamagellan.sdk.bookmarks.data.MapObject;
+import app.alhaswamagellan.sdk.routing.RoutingController;
+import app.alhaswamagellan.util.InputUtils;
+import app.alhaswamagellan.util.ThemeUtils;
+import app.alhaswamagellan.widget.placepage.PlacePageUtils;
+import app.alhaswamagellan.widget.placepage.PlacePageViewModel;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.color.MaterialColors;
+
+public class SearchFragmentController extends Fragment implements SearchFragment.SearchFragmentListener
+{
+  private BottomSheetBehavior<FrameLayout> mBottomSheetBehavior;
+  private final Observer<MapObject> mPlacePageMapObjectObserver = new Observer<>() {
+    @Override
+    public void onChanged(MapObject mapObject)
+    {
+      if (mapObject != null)
+      {
+        // Hide search when place page is opened
+        if (mBottomSheetBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN)
+        {
+          mViewModel.setHiddenByPlacePage(true);
+          mViewModel.setSearchPageLastState(mBottomSheetBehavior.getState());
+          hideSearchSheet();
+        }
+      }
+      else
+      {
+        // Only restore search page if search is actually enabled
+        Boolean searchEnabled = mViewModel.getSearchEnabled().getValue();
+        Integer lastState = mViewModel.getSearchPageLastState().getValue();
+        if (searchEnabled != null && searchEnabled && lastState != null && lastState != BottomSheetBehavior.STATE_HIDDEN
+            && mViewModel.isHiddenByPlacePage())
+        {
+          showSearchSheet(lastState);
+          mViewModel.setHiddenByPlacePage(false);
+        }
+      }
+    }
+  };
+  private FrameLayout mSearchPageContainer;
+  private int mDistanceToTop;
+  private int mViewportMinHeight;
+  private SearchPageViewModel mViewModel;
+  private final Observer<Boolean> mSearchPageEnabledObserver = new Observer<>() {
+    @Override
+    public void onChanged(Boolean enabled)
+    {
+      if (enabled == null)
+        return;
+      if (enabled)
+      {
+        if (mPlacePageViewModel.getMapObject().getValue() != null && !mViewModel.isHiddenByPlacePage())
+          mPlacePageViewModel.setMapObject(null);
+        if (mViewModel.isHiddenByPlacePage())
+          return; // hidden behind the place page (e.g. after recreation); restored when it closes
+        Integer lastState = mViewModel.getSearchPageLastState().getValue();
+        if (lastState != null && lastState != BottomSheetBehavior.STATE_HIDDEN)
+        {
+          showSearchSheet(lastState);
+        }
+        else if (mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN)
+          showSearchSheet(BottomSheetBehavior.STATE_EXPANDED);
+      }
+      else
+      {
+        hideSearchSheet();
+      }
+    }
+  };
+  private PlacePageViewModel mPlacePageViewModel;
+  private MapButtonsViewModel mMapButtonsViewModel;
+  private ViewGroup mCoordinator;
+  private WindowInsetsCompat mCurrentWindowInsets;
+  private int mTopHeaderHeight = 0;
+  private View mMapView;
+  private final BottomSheetBehavior.BottomSheetCallback mDefaultBottomSheetCallback =
+      new BottomSheetBehavior.BottomSheetCallback() {
+        @Override
+        public void onStateChanged(@NonNull View bottomSheet, int newState)
+        {
+          updateMapTouchListener(newState);
+          if (PlacePageUtils.isSettlingState(newState))
+            return;
+          if (PlacePageUtils.isDraggingState(newState))
+          {
+            InputUtils.hideKeyboard(bottomSheet);
+            return;
+          }
+
+          if (!RoutingController.get().isNavigating() && !RoutingController.get().isPlanning())
+            PlacePageUtils.updateMapViewport(mCoordinator, mDistanceToTop, mViewportMinHeight);
+
+          if (PlacePageUtils.isHiddenState(newState))
+          {
+            if (!mViewModel.isHiddenByPlacePage() && mViewModel.getSearchEnabled().getValue() != null
+                && mViewModel.getSearchEnabled().getValue())
+            {
+              mViewModel.setSearchEnabled(false, null);
+            }
+          }
+          // setSearchPageLastState() filters non-stable states (DRAGGING/SETTLING/HIDDEN).
+          mViewModel.setSearchPageLastState(newState);
+        }
+
+        @Override
+        public void onSlide(@NonNull View bottomSheet, float slideOffset)
+        {
+          mDistanceToTop = bottomSheet.getTop();
+          mViewModel.setSearchPageDistanceToTop(mDistanceToTop);
+        }
+      };
+  // These variables are used to determine if the touch event is a tap or a drag
+  private float mInitialX = 0f;
+  private float mInitialY = 0f;
+  private int mTouchSlop = 0;
+
+  private int mMinCollapsedPeekHeight = 0;
+  private final Observer<Integer> mTopHeaderHeightObserver = height ->
+  {
+    mTopHeaderHeight = height != null ? height : 0;
+    updateExpandedOffset();
+  };
+  private final Observer<Integer> mToolbarHeightObserver = new Observer<>() {
+    @Override
+    public void onChanged(Integer height)
+    {
+      if (height != null && height > 0)
+        mBottomSheetBehavior.setPeekHeight(Math.max(height, mMinCollapsedPeekHeight) + navBarHeight());
+    }
+  };
+  private final View.OnTouchListener mMapTouchListener = new View.OnTouchListener() {
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouch(View v, MotionEvent event)
+    {
+      if (event.getAction() == MotionEvent.ACTION_DOWN)
+        InputUtils.hideKeyboard(v);
+      boolean drag = isDrag(event);
+      if (event.getAction() == MotionEvent.ACTION_UP && !drag)
+      {
+        v.performClick();
+        return false;
+      }
+      if (!drag)
+        return false;
+      if (mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_SETTLING)
+        return false;
+      if (mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_EXPANDED
+          || mBottomSheetBehavior.getState() == BottomSheetBehavior.STATE_HALF_EXPANDED)
+        showSearchSheet(BottomSheetBehavior.STATE_COLLAPSED);
+      return false;
+    }
+  };
+
+  @Nullable
+  @Override
+  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                           @Nullable Bundle savedInstanceState)
+  {
+    return inflater.inflate(R.layout.search_fragment_container, container, false);
+  }
+
+  @SuppressLint("ClickableViewAccessibility")
+  @Override
+  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState)
+  {
+    super.onViewCreated(view, savedInstanceState);
+    mViewModel = new ViewModelProvider(requireActivity()).get(SearchPageViewModel.class);
+    mPlacePageViewModel = new ViewModelProvider(requireActivity()).get(PlacePageViewModel.class);
+    mMapButtonsViewModel = new ViewModelProvider(requireActivity()).get(MapButtonsViewModel.class);
+
+    mCoordinator = requireActivity().findViewById(R.id.coordinator);
+    mViewportMinHeight = requireActivity().getResources().getDimensionPixelSize(R.dimen.viewport_min_height);
+
+    mSearchPageContainer = view.findViewById(R.id.search_page_container);
+    mTouchSlop = ViewConfiguration.get(requireContext()).getScaledTouchSlop();
+
+    mMinCollapsedPeekHeight = (int) getResources().getDimension(
+        ThemeUtils.getResource(requireContext(), androidx.appcompat.R.attr.actionBarSize));
+
+    float topRadius = getResources().getDimension(R.dimen.bottom_sheet_corner_radius);
+    int surface = MaterialColors.getColor(mSearchPageContainer, com.google.android.material.R.attr.colorSurface);
+    mSearchPageContainer.setBackgroundColor(surface);
+    mSearchPageContainer.setOutlineProvider(new ViewOutlineProvider() {
+      @Override
+      public void getOutline(@NonNull View view, @NonNull Outline outline)
+      {
+        outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), topRadius);
+      }
+    });
+    mSearchPageContainer.setClipToOutline(true);
+
+    mBottomSheetBehavior = BottomSheetBehavior.from(mSearchPageContainer);
+
+    mBottomSheetBehavior.setFitToContents(false);
+    // Peek height will be set dynamically when toolbar height is measured
+    mBottomSheetBehavior.setHalfExpandedRatio(0.5f); // mid
+    mBottomSheetBehavior.setHideable(true);
+    mBottomSheetBehavior.setDraggable(true);
+    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+
+    mSearchPageContainer.post(this::updateExpandedOffset);
+    mSearchPageContainer.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight,
+                                                    oldBottom) -> mViewModel.setSearchPageWidth(right - left));
+
+    final View searchBottomContainer = view.findViewById(R.id.search_bottom_container);
+
+    ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
+      mCurrentWindowInsets = insets;
+      int navH = navBarHeight();
+      Integer toolbarH = mViewModel.getToolbarHeight().getValue();
+      if (toolbarH != null && toolbarH > 0)
+        mBottomSheetBehavior.setPeekHeight(Math.max(toolbarH, mMinCollapsedPeekHeight) + navH);
+      boolean imeVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+      updateExpandedOffset();
+      if (imeVisible && mViewModel.getSearchEnabled().getValue() != null && mViewModel.getSearchEnabled().getValue()
+          && !mViewModel.isHiddenByPlacePage())
+        showSearchSheet(BottomSheetBehavior.STATE_EXPANDED);
+      Insets horizontalInsets =
+          insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+      searchBottomContainer.setPadding(horizontalInsets.left, searchBottomContainer.getPaddingTop(),
+                                       horizontalInsets.right, searchBottomContainer.getPaddingBottom());
+      // Explicitly dispatch insets into the bottom sheet's content tree so that
+      // child views (e.g. tab RecyclerViews created lazily by ViewPager) receive them.
+      ViewCompat.dispatchApplyWindowInsets(mSearchPageContainer, insets);
+      return insets;
+    });
+
+    // Set touch listener on map view to handle drag events
+    mMapView = requireActivity().findViewById(R.id.map);
+    if (mMapView != null)
+    {
+      updateMapTouchListener(mBottomSheetBehavior.getState());
+    }
+  }
+
+  @SuppressLint("ClickableViewAccessibility")
+  @Override
+  public void onDestroyView()
+  {
+    super.onDestroyView();
+    if (mMapView != null)
+    {
+      mMapView.setOnTouchListener(null);
+      mMapView = null;
+    }
+  }
+
+  @Override
+  public void onStart()
+  {
+    super.onStart();
+    mPlacePageViewModel.getMapObject().observe(getViewLifecycleOwner(), mPlacePageMapObjectObserver);
+    mBottomSheetBehavior.addBottomSheetCallback(mDefaultBottomSheetCallback);
+    mViewModel.getSearchEnabled().observe(getViewLifecycleOwner(), mSearchPageEnabledObserver);
+    mViewModel.getToolbarHeight().observe(getViewLifecycleOwner(), mToolbarHeightObserver);
+    mMapButtonsViewModel.getTopHeaderHeight().observe(getViewLifecycleOwner(), mTopHeaderHeightObserver);
+  }
+
+  @Override
+  public void onStop()
+  {
+    super.onStop();
+    mBottomSheetBehavior.removeBottomSheetCallback(mDefaultBottomSheetCallback);
+  }
+
+  private int navBarHeight()
+  {
+    if (mCurrentWindowInsets == null)
+      return 0;
+    return mCurrentWindowInsets.isVisible(WindowInsetsCompat.Type.navigationBars())
+      ? mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+      : 0;
+  }
+
+  private void updateExpandedOffset()
+  {
+    if (mBottomSheetBehavior == null || mSearchPageContainer == null)
+      return;
+    int topInset = 0;
+    if (mCurrentWindowInsets != null)
+    {
+      int systemBarsTop = mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+      int cutoutTop = mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.displayCutout()).top;
+      topInset = Math.max(systemBarsTop, cutoutTop);
+    }
+    int expandedOffset = topInset + mTopHeaderHeight;
+    mBottomSheetBehavior.setExpandedOffset(expandedOffset);
+    mViewModel.setExpandedOffset(expandedOffset);
+    // BottomSheetBehavior.setExpandedOffset doesn't request a layout (unlike setPeekHeight), so an
+    // already-expanded sheet would stay at the previous offset until the user drags it. Force a
+    // layout pass so onLayoutChild re-snaps the sheet to the new offset.
+    mSearchPageContainer.requestLayout();
+  }
+
+  private void updateMapTouchListener(int state)
+  {
+    if (mMapView == null)
+      return;
+    if (state == BottomSheetBehavior.STATE_HIDDEN)
+      mMapView.setOnTouchListener(null);
+    else
+      mMapView.setOnTouchListener(mMapTouchListener);
+  }
+
+  boolean isDrag(MotionEvent event)
+  {
+    return switch (event.getAction())
+    {
+      case MotionEvent.ACTION_DOWN ->
+      {
+        mInitialX = event.getX();
+        mInitialY = event.getY();
+        yield false;
+      }
+      case MotionEvent.ACTION_UP -> false;
+      case MotionEvent.ACTION_MOVE ->
+      {
+        float dx = Math.abs(event.getX() - mInitialX);
+        float dy = Math.abs(event.getY() - mInitialY);
+        // Consider it a drag if movement exceeds the platform-scaled touch slop in either axis.
+        yield dx >= mTouchSlop || dy >= mTouchSlop;
+      }
+      default -> false;
+    };
+  }
+
+  public boolean onBackPressed()
+  {
+    Fragment fragment = getChildFragmentManager().findFragmentById(R.id.search_fragment);
+    if (fragment instanceof SearchFragment searchFragment && searchFragment.onBackPressed())
+      return true;
+
+    if (mBottomSheetBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN)
+    {
+      hideSearchSheet();
+      return true;
+    }
+    return false;
+  }
+
+  @Override
+  public void onSearchClicked()
+  {
+    showSearchSheet(BottomSheetBehavior.STATE_HALF_EXPANDED);
+  }
+
+  @Override
+  public void onQuerySubmitted()
+  {
+    showSearchSheet(BottomSheetBehavior.STATE_COLLAPSED);
+  }
+
+  @Override
+  public void closeSearch()
+  {
+    hideSearchSheet();
+  }
+
+  @Override
+  public void onChooseOnMapClicked()
+  {
+    // Closes the search sheet on its way in; the pending POI pick survives and the crosshair commits into it.
+    ((MwmActivity) requireActivity()).showPositionChooserForRoutePoint();
+  }
+
+  // The sheet is kept non-hideable while visible so a swipe can't dismiss it. Re-enable hideable here so
+  // this programmatic close is the only path to STATE_HIDDEN (setState(HIDDEN) is rejected when !hideable).
+  private void hideSearchSheet()
+  {
+    // Dismiss the keyboard on every programmatic close path (X button, back, place page, forceCloseSearchFragment).
+    // Otherwise the IME inset lingers and the routing panel re-appearing underneath gets pushed down by it.
+    InputUtils.hideKeyboard(mSearchPageContainer);
+    mBottomSheetBehavior.setHideable(true);
+    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+  }
+
+  // Order matters: setState() must run before setHideable(false). Disabling hideable while the sheet is
+  // still at STATE_HIDDEN would make Material immediately force STATE_COLLAPSED. hideable=false then locks
+  // the sheet so only hideSearchSheet() can close it.
+  private void showSearchSheet(@BottomSheetBehavior.State int state)
+  {
+    mBottomSheetBehavior.setState(state);
+    mBottomSheetBehavior.setHideable(false);
+  }
+}

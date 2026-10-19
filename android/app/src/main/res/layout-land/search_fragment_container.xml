@@ -22,7 +22,7 @@
       app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
       <androidx.fragment.app.FragmentContainerView
         android:id="@+id/search_fragment"
-        android:name="app.organicmaps.search.SearchFragment"
+        android:name="app.alhaswamagellan.search.SearchFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
     </FrameLayout>

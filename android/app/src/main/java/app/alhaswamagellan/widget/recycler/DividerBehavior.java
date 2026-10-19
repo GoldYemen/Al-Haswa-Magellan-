@@ -1,0 +1,19 @@
+package app.alhaswamagellan.widget.recycler;
+
+/**
+ * Interface for ViewHolders to specify their divider drawing behavior.
+ */
+public interface DividerBehavior
+{
+  /** Use full-width divider adjacent to this item (no start margin). */
+  default boolean useFullWidthDivider()
+  {
+    return false;
+  }
+
+  /** Skip drawing divider below this item. */
+  default boolean skipDivider()
+  {
+    return false;
+  }
+}

@@ -117,7 +117,7 @@
       android:textAppearance="@style/MwmTextAppearance.Body2"
       tools:text="1024%"/>
 
-    <app.organicmaps.widget.WheelProgressView
+    <app.alhaswamagellan.widget.WheelProgressView
       android:id="@+id/wpv__download_progress"
       android:layout_width="@dimen/downloader_status_size"
       android:layout_height="@dimen/downloader_status_size"

@@ -23,28 +23,28 @@
       android:layout_height="wrap_content"
       android:orientation="horizontal">
 
-      <app.organicmaps.widget.RoutingToolbarButton
+      <app.alhaswamagellan.widget.RoutingToolbarButton
         android:id="@+id/vehicle"
         style="@style/MwmWidget.RoutingToolbarCell"
         android:button="@drawable/ic_car"
         android:checked="true" />
 
-      <app.organicmaps.widget.RoutingToolbarButton
+      <app.alhaswamagellan.widget.RoutingToolbarButton
         android:id="@+id/pedestrian"
         style="@style/MwmWidget.RoutingToolbarCell"
         android:button="@drawable/ic_pedestrian" />
 
-      <app.organicmaps.widget.RoutingToolbarButton
+      <app.alhaswamagellan.widget.RoutingToolbarButton
         android:id="@+id/transit"
         style="@style/MwmWidget.RoutingToolbarCell"
         android:button="@drawable/ic_transit" />
 
-      <app.organicmaps.widget.RoutingToolbarButton
+      <app.alhaswamagellan.widget.RoutingToolbarButton
         android:id="@+id/bicycle"
         style="@style/MwmWidget.RoutingToolbarCell"
         android:button="@drawable/ic_bike" />
 
-      <app.organicmaps.widget.RoutingToolbarButton
+      <app.alhaswamagellan.widget.RoutingToolbarButton
         android:id="@+id/ruler"
         style="@style/MwmWidget.RoutingToolbarCell"
         android:button="@drawable/ic_ruler_route" />

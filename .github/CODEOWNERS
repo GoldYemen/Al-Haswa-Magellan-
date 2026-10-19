@@ -17,7 +17,7 @@
 /data/symbols-svg/ @organicmaps/design
 
 # Android Auto (overrides — AFTER android catch-all).
-/android/app/src/main/java/app/organicmaps/car/ @organicmaps/android-auto
+/android/app/src/main/java/app/alhaswamagellan/car/ @organicmaps/android-auto
 /android/libs/car/ @organicmaps/android-auto
 /android/sdk/car/ @organicmaps/android-auto
 

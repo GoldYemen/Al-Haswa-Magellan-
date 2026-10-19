@@ -5,7 +5,7 @@ plugins {
 apply from: "${rootProject.rootDir}/groovy/common-config.gradle"
 
 android {
-  namespace 'app.organicmaps.car'
+  namespace 'app.alhaswamagellan.car'
   // enableKotlin = true  // see app/build.gradle
 
   compileOptions {

@@ -6,7 +6,7 @@
     android:background="#0D1B2A">
 
     <!-- Fullscreen Compass View -->
-    <app.organicmaps.hawsa.CompassView
+    <app.alhaswamagellan.hawsa.CompassView
         android:id="@+id/compass_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

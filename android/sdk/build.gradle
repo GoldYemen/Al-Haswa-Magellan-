@@ -8,7 +8,7 @@ apply from: "${rootProject.rootDir}/groovy/common-config.gradle"
 apply from: "${rootProject.rootDir}/groovy/publishing.gradle"
 
 android {
-  namespace = 'app.organicmaps.sdk'
+  namespace = 'app.alhaswamagellan.sdk'
   project.ext.enableKotlin = true  // see app/build.gradle
 
   buildFeatures {

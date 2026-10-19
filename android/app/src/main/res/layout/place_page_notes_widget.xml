@@ -2,7 +2,7 @@
 <merge
   xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:tools="http://schemas.android.com/tools"
-  tools:parentTag="app.organicmaps.widget.placepage.sections.ExpandableNotesView">
+  tools:parentTag="app.alhaswamagellan.widget.placepage.sections.ExpandableNotesView">
 
   <FrameLayout
     android:layout_width="match_parent"

@@ -1,0 +1,861 @@
+package app.alhaswamagellan.widget.placepage;
+
+import android.animation.ValueAnimator;
+import android.app.Activity;
+import android.app.Dialog;
+import android.content.Intent;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.graphics.Outline;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewOutlineProvider;
+import androidx.annotation.ColorInt;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.widget.NestedScrollView;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.interpolator.view.animation.FastOutSlowInInterpolator;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import app.alhaswamagellan.MwmActivity;
+import app.alhaswamagellan.R;
+import app.alhaswamagellan.api.Const;
+import app.alhaswamagellan.bookmarks.ChooseBookmarkCategoryFragment;
+import app.alhaswamagellan.intent.Factory;
+import app.alhaswamagellan.sdk.ChoosePositionMode;
+import app.alhaswamagellan.sdk.Framework;
+import app.alhaswamagellan.sdk.bookmarks.data.Bookmark;
+import app.alhaswamagellan.sdk.bookmarks.data.BookmarkManager;
+import app.alhaswamagellan.sdk.bookmarks.data.MapObject;
+import app.alhaswamagellan.sdk.bookmarks.data.RoadWarningMarkType;
+import app.alhaswamagellan.sdk.bookmarks.data.Track;
+import app.alhaswamagellan.sdk.location.TrackRecorder;
+import app.alhaswamagellan.sdk.routing.RouteMarkType;
+import app.alhaswamagellan.sdk.routing.RoutingController;
+import app.alhaswamagellan.sdk.settings.RoadType;
+import app.alhaswamagellan.sdk.util.log.Logger;
+import app.alhaswamagellan.util.UiUtils;
+import app.alhaswamagellan.util.bottomsheet.MenuBottomSheetFragment;
+import app.alhaswamagellan.util.bottomsheet.MenuBottomSheetItem;
+import app.alhaswamagellan.widget.colorpicker.ColorPickerFragment;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PlacePageController
+    extends Fragment implements PlacePageView.PlacePageViewListener, PlacePageButtons.PlacePageButtonClickListener,
+                                MenuBottomSheetFragment.MenuBottomSheetInterface, Observer<MapObject>
+{
+  private static final String TAG = PlacePageController.class.getSimpleName();
+  private static final String PLACE_PAGE_BUTTONS_FRAGMENT_TAG = "PLACE_PAGE_BUTTONS";
+  private static final String PLACE_PAGE_FRAGMENT_TAG = "PLACE_PAGE";
+  private static final String COLOR_REQUEST_KEY = "PlacePageColor";
+  private static final String CATEGORY_REQUEST_KEY = "PlacePageCategory";
+  private static final String TARGET_ID = "TargetId";
+  private static final String TARGET_IS_TRACK = "TargetIsTrack";
+  private static final String COLOR_TARGET_INITIAL = "ColorTargetInitial";
+  // Slide offset threshold below collapsed (0.0) at which the sheet is dismissed.
+  private static final float EASY_DISMISS_SLIDE_THRESHOLD = -0.15f;
+
+  private BottomSheetBehavior<View> mPlacePageBehavior;
+  private NestedScrollView mPlacePage;
+  private ViewGroup mPlacePageContainer;
+  private ViewGroup mCoordinator;
+  private int mViewportMinHeight;
+  private int mButtonsHeight;
+  private int mMaxButtons;
+  private PlacePageViewModel mViewModel;
+  private int mPreviewHeight;
+  private int mFrameHeight;
+  @Nullable
+  private MapObject mMapObject;
+  @Nullable
+  private MapObject mPreviousMapObject;
+  private WindowInsetsCompat mCurrentWindowInsets;
+  private View mPlacePageRoot;
+  private View mPpBottomContainer;
+
+  private boolean mShouldCollapse;
+  // Enabled after the sheet reaches COLLAPSED; prevents dismiss during initial open animation.
+  private boolean mEasyDismissEnabled;
+  private int mDistanceToTop;
+
+  private ValueAnimator mCustomPeekHeightAnimator;
+  private PlacePageListener mPlacePageListener;
+  private Dialog mAlertDialog;
+
+  private final BottomSheetBehavior.BottomSheetCallback mDefaultBottomSheetCallback =
+      new BottomSheetBehavior.BottomSheetCallback() {
+        @Override
+        public void onStateChanged(@NonNull View bottomSheet, int newState)
+        {
+          Logger.d(TAG, "State change, new = " + PlacePageUtils.toString(newState));
+          if (PlacePageUtils.isSettlingState(newState) || PlacePageUtils.isDraggingState(newState))
+            return;
+
+          PlacePageUtils.updateMapViewport(mCoordinator, mDistanceToTop, mViewportMinHeight);
+
+          if (PlacePageUtils.isExpandedState(newState))
+            mEasyDismissEnabled = false;
+          else if (PlacePageUtils.isCollapsedState(newState))
+            mEasyDismissEnabled = true;
+
+          if (PlacePageUtils.isHiddenState(newState))
+          {
+            mEasyDismissEnabled = false;
+            // Clear before onHiddenInternal(): it may restore a transit PP, which sets the flag again.
+            mPlacePageListener.onPlacePageActiveChanged(false);
+            onHiddenInternal();
+          }
+        }
+
+        @Override
+        public void onSlide(@NonNull View bottomSheet, float slideOffset)
+        {
+          stopCustomPeekHeightAnimation();
+          mDistanceToTop = bottomSheet.getTop();
+          mViewModel.setPlacePageDistanceToTop(mDistanceToTop);
+          if (slideOffset < EASY_DISMISS_SLIDE_THRESHOLD && mEasyDismissEnabled)
+            mPlacePageBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+        }
+      };
+
+  @Nullable
+  @Override
+  public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                           @Nullable Bundle savedInstanceState)
+  {
+    return inflater.inflate(R.layout.place_page_container_fragment, container, false);
+  }
+
+  @Override
+  public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState)
+  {
+    super.onViewCreated(view, savedInstanceState);
+    final FragmentActivity activity = requireActivity();
+    mPlacePageListener = (MwmActivity) activity;
+    activity.getSupportFragmentManager().setFragmentResultListener(COLOR_REQUEST_KEY, getViewLifecycleOwner(),
+                                                                   (key, result) -> onColorPicked(result));
+    activity.getSupportFragmentManager().setFragmentResultListener(CATEGORY_REQUEST_KEY, getViewLifecycleOwner(),
+                                                                   (key, result) -> onCategoryPicked(result));
+
+    final Resources res = activity.getResources();
+    mViewportMinHeight = res.getDimensionPixelSize(R.dimen.viewport_min_height);
+    mButtonsHeight = (int) res.getDimension(R.dimen.place_page_buttons_height);
+    mMaxButtons = res.getInteger(R.integer.pp_buttons_max);
+
+    mCoordinator = activity.findViewById(R.id.coordinator);
+    mPlacePageRoot = view.findViewById(R.id.pp_root);
+    mPpBottomContainer = view.findViewById(R.id.pp_bottom_container);
+    mPlacePage = view.findViewById(R.id.placepage);
+    mPlacePageContainer = view.findViewById(R.id.placepage_container);
+    mPlacePageBehavior = BottomSheetBehavior.from(mPlacePage);
+
+    mShouldCollapse = true;
+
+    mPlacePageBehavior.setHideable(true);
+    mPlacePageBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+    mPlacePageBehavior.setFitToContents(true);
+    mPlacePageBehavior.setSkipCollapsed(false);
+    // Clip to outline so top corners stay rounded regardless of BottomSheetBehavior shape
+    // animations. Extending the rect past the bottom hides the bottom corner rounding.
+    final int topRadius = res.getDimensionPixelSize(R.dimen.bottom_sheet_corner_radius);
+    mPlacePage.setOutlineProvider(new ViewOutlineProvider() {
+      @Override
+      public void getOutline(@NonNull View v, @NonNull Outline outline)
+      {
+        outline.setRoundRect(0, 0, v.getWidth(), v.getHeight() + topRadius, topRadius);
+      }
+    });
+    mPlacePage.setClipToOutline(true);
+
+    UiUtils.bringViewToFrontOf(view.findViewById(R.id.pp_buttons_fragment), mPlacePage);
+    mViewModel = new ViewModelProvider(requireActivity()).get(PlacePageViewModel.class);
+
+    ViewCompat.setOnApplyWindowInsetsListener(mPlacePage, (v, windowInsets) -> {
+      mCurrentWindowInsets = windowInsets;
+      return windowInsets;
+    });
+
+    ViewCompat.requestApplyInsets(mPlacePage);
+    mPlacePage.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+      if (top != oldTop)
+      {
+        mDistanceToTop = oldTop;
+        mViewModel.setPlacePageDistanceToTop(mDistanceToTop);
+      }
+    });
+  }
+
+  // Returns the "avoid" routing button for an avoidable warning, or null otherwise.
+  // STEPS/GATE/LIFT_GATE warnings have no routing option to avoid them, and UNKNOWN is not a warning.
+  @Nullable
+  private static PlacePageButtons.ButtonType toPlacePageButton(@NonNull RoadWarningMarkType type)
+  {
+    return switch (type)
+    {
+      case DIRTY -> PlacePageButtons.ButtonType.ROUTE_AVOID_UNPAVED;
+      case FERRY -> PlacePageButtons.ButtonType.ROUTE_AVOID_FERRY;
+      case TOLL -> PlacePageButtons.ButtonType.ROUTE_AVOID_TOLL;
+      default -> null;
+    };
+  }
+
+  private void stopCustomPeekHeightAnimation()
+  {
+    if (mCustomPeekHeightAnimator != null && mCustomPeekHeightAnimator.isStarted())
+    {
+      mCustomPeekHeightAnimator.end();
+      setPlacePageHeightBounds();
+    }
+  }
+
+  private void onHiddenInternal()
+  {
+    // Must remove fragments before nativeDeactivatePopup() — the native call may
+    // restore a transit PP (re-creating fragments), and commitNow() ensures the old
+    // fragments are gone so createPlacePageFragments() sees no existing tags.
+    removePlacePageFragments();
+    resetPlacePageHeightBounds();
+    boolean recovered = false;
+    if (ChoosePositionMode.get() == ChoosePositionMode.None)
+      recovered = Framework.nativeDeactivatePopup();
+    // Skip circle deselect when recovery re-activated the transit PP — it just drew a new circle.
+    if (!recovered)
+      Framework.nativeDeactivateMapSelectionCircle(false);
+  }
+
+  private void onTrackRecordingSelected()
+  {
+    if (ChoosePositionMode.get() == ChoosePositionMode.None)
+      Framework.nativeDeactivatePopup();
+    Framework.nativeDeactivateMapSelectionCircle(false);
+  }
+
+  @Nullable
+  public ArrayList<MenuBottomSheetItem> getMenuBottomSheetItems(String id)
+  {
+    final List<PlacePageButtons.ButtonType> currentItems = mViewModel.getCurrentButtons().getValue();
+    if (currentItems == null || currentItems.size() <= mMaxButtons)
+      return null;
+    ArrayList<MenuBottomSheetItem> items = new ArrayList<>();
+    for (int i = mMaxButtons - 1; i < currentItems.size(); i++)
+    {
+      final PlacePageButton bsItem = PlacePageButtonFactory.createButton(currentItems.get(i), requireActivity());
+      items.add(
+          new MenuBottomSheetItem(bsItem.getTitle(), bsItem.getIcon(), () -> onPlacePageButtonClick(bsItem.getType())));
+    }
+    return items;
+  }
+
+  private void setPlacePageInteractions(boolean enabled)
+  {
+    // Prevent place page scrolling when playing the close animation
+    mPlacePageBehavior.setDraggable(enabled);
+    mPlacePage.setNestedScrollingEnabled(enabled);
+    // Prevent user interaction with place page content when closing
+    mPlacePageContainer.setEnabled(enabled);
+  }
+
+  static void showColorPicker(@NonNull FragmentManager fm, long id, boolean isTrack, @ColorInt int color)
+  {
+    final Bundle target = new Bundle();
+    target.putLong(TARGET_ID, id);
+    target.putBoolean(TARGET_IS_TRACK, isTrack);
+    target.putInt(COLOR_TARGET_INITIAL, color);
+    ColorPickerFragment.showForResult(fm, color, COLOR_REQUEST_KEY, target);
+  }
+
+  static void showCategoryPicker(@NonNull FragmentManager fm, long id, boolean isTrack, long categoryId)
+  {
+    final Bundle target = new Bundle();
+    target.putLong(TARGET_ID, id);
+    target.putBoolean(TARGET_IS_TRACK, isTrack);
+    ChooseBookmarkCategoryFragment.showForResult(fm, categoryId, CATEGORY_REQUEST_KEY, target);
+  }
+
+  private void onColorPicked(@NonNull Bundle result)
+  {
+    final int color = result.getInt(ColorPickerFragment.RESULT_COLOR);
+    if (color == result.getInt(COLOR_TARGET_INITIAL))
+      return;
+    final long id = result.getLong(TARGET_ID);
+    final boolean isTrack = result.getBoolean(TARGET_IS_TRACK);
+    final long[] ids = {id};
+    final long[] none = {};
+    BookmarkManager.INSTANCE.changeBookmarksAndTracksColor(isTrack ? none : ids, isTrack ? ids : none, color);
+
+    refreshMatchingPlacePage(id, isTrack);
+  }
+
+  private void onCategoryPicked(@NonNull Bundle result)
+  {
+    final long categoryId = result.getLong(ChooseBookmarkCategoryFragment.RESULT_CATEGORY_ID);
+    final long id = result.getLong(TARGET_ID);
+    final boolean isTrack = result.getBoolean(TARGET_IS_TRACK);
+    final long[] ids = {id};
+    final long[] none = {};
+    BookmarkManager.INSTANCE.moveBookmarksAndTracks(isTrack ? none : ids, isTrack ? ids : none, categoryId);
+
+    refreshMatchingPlacePage(id, isTrack);
+  }
+
+  private void refreshMatchingPlacePage(long id, boolean isTrack)
+  {
+    if (isTrack && mMapObject instanceof Track track && track.getTrackId() == id)
+      BookmarkManager.INSTANCE.updateTrackPlacePage();
+    else if (!isTrack && mMapObject instanceof Bookmark bookmark && bookmark.getBookmarkId() == id)
+      BookmarkManager.INSTANCE.updateBookmarkPlacePage(id);
+  }
+
+  private void close()
+  {
+    setPlacePageInteractions(false);
+    // Normally the flag is cleared in onStateChanged(HIDDEN), but setState() fires no callback when
+    // the sheet is already hidden: on re-entry from onHiddenInternal() -> setMapObject(null) ->
+    // onChanged(null), which happens on every close, and when dismissed before the open animation.
+    if (PlacePageUtils.isHiddenState(mPlacePageBehavior.getState()))
+      mPlacePageListener.onPlacePageActiveChanged(false);
+    else
+      mPlacePageBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+  }
+
+  private void resetPlacePageHeightBounds()
+  {
+    mFrameHeight = 0;
+    mPlacePageContainer.setMinimumHeight(0);
+  }
+
+  /**
+   * Set the min and max height of the place page to prevent jumps when switching from one map object
+   * to the other.
+   */
+  private void setPlacePageHeightBounds()
+  {
+    final int peekHeight = calculatePeekHeight();
+    final Insets insets = mCurrentWindowInsets != null
+                            ? mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()
+                                                             | WindowInsetsCompat.Type.displayCutout())
+                            : Insets.NONE;
+    // Make sure the place page can reach the peek height
+    final int minHeight = Math.max(peekHeight, mFrameHeight);
+    // Prevent the place page from showing under the status bar
+    final int topInsets = insets.top;
+    final int maxHeight = Math.min(minHeight + insets.bottom, mCoordinator.getHeight() - topInsets);
+    // Set the minimum height of the place page to prevent jumps when new data results in SMALLER content
+    // This cannot be set on the place page itself as it has the fitToContent property set
+    mPlacePageContainer.setMinimumHeight(minHeight);
+    // Set the maximum height of the place page to prevent jumps when new data results in BIGGER content
+    // It does not take into account the navigation bar height so we need to add it manually
+    mPlacePageBehavior.setMaxHeight(maxHeight);
+    mPlacePageRoot.setPadding(0, topInsets, 0, 0);
+    if (mPpBottomContainer != null
+        && (mPpBottomContainer.getPaddingLeft() != insets.left || mPpBottomContainer.getPaddingRight() != insets.right))
+      mPpBottomContainer.setPadding(insets.left, mPpBottomContainer.getPaddingTop(), insets.right, 0);
+  }
+
+  /**
+   * Make sure the place page can reach the peek height
+   */
+  private void preparePlacePageMinHeight(int peekHeight)
+  {
+    final int currentHeight = mPlacePageContainer.getHeight();
+    if (currentHeight < peekHeight)
+      mPlacePageContainer.setMinimumHeight(peekHeight);
+  }
+
+  private void setPeekHeight()
+  {
+    final int peekHeight = calculatePeekHeight();
+    preparePlacePageMinHeight(peekHeight);
+
+    final int state = mPlacePageBehavior.getState();
+    // Do not animate the peek height if the place page should not be collapsed (eg: when returning from editor)
+    final boolean shouldAnimate =
+        !(PlacePageUtils.isExpandedState(state) && !mShouldCollapse) && !PlacePageUtils.isHiddenState(state);
+    if (shouldAnimate)
+      animatePeekHeight(peekHeight);
+    else
+    {
+      mPlacePageBehavior.setPeekHeight(peekHeight);
+      setPlacePageHeightBounds();
+    }
+  }
+
+  /**
+   * Using the animate param in setPeekHeight does not work when adding removing fragments
+   * from inside the place page so we manually animate the peek height with ValueAnimator
+   */
+  private void animatePeekHeight(int peekHeight)
+  {
+    // This callback may be called before insets are updated when resuming the app
+    if (mCurrentWindowInsets == null)
+      return;
+
+    final int bottomInsets = mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom;
+    // Make sure to start from the current height of the place page
+    final int parentHeight = ((View) mPlacePage.getParent()).getHeight();
+    // Make sure to remove the navbar height because the peek height already takes it into account
+    int initialHeight = parentHeight - mDistanceToTop - bottomInsets;
+
+    if (mCustomPeekHeightAnimator != null)
+      mCustomPeekHeightAnimator.cancel();
+    mCustomPeekHeightAnimator = ValueAnimator.ofInt(initialHeight, peekHeight);
+    mCustomPeekHeightAnimator.setInterpolator(new FastOutSlowInInterpolator());
+    mCustomPeekHeightAnimator.addUpdateListener(valueAnimator -> {
+      if (!isAdded())
+      {
+        valueAnimator.cancel();
+        return;
+      }
+      int value = (Integer) valueAnimator.getAnimatedValue();
+      // Make sure the place page can reach the animated peek height to prevent jumps
+      // maxHeight does not take the navbar height into account so we manually add it
+      mPlacePageBehavior.setMaxHeight(value + bottomInsets);
+      mPlacePageBehavior.setPeekHeight(value);
+      // The place page is not firing the slide callbacks when using this animation, so we must call them manually
+      mDistanceToTop = parentHeight - value - bottomInsets;
+      mViewModel.setPlacePageDistanceToTop(mDistanceToTop);
+      if (value == peekHeight)
+      {
+        PlacePageUtils.updateMapViewport(mCoordinator, mDistanceToTop, mViewportMinHeight);
+        setPlacePageHeightBounds();
+      }
+    });
+    mCustomPeekHeightAnimator.setDuration(200);
+    mCustomPeekHeightAnimator.start();
+  }
+
+  private int calculatePeekHeight()
+  {
+    final int bottomInsets = (mCurrentWindowInsets != null)
+                               ? mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+                               : 0;
+    final boolean isLandscape = getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE;
+    final int bottomMargins = getResources().getDimensionPixelSize(R.dimen.margin_double);
+    final View plusDetailsContainer = mPlacePage.findViewById(R.id.plus_details);
+    int peekHeight = mPreviewHeight + mButtonsHeight + bottomMargins;
+    final View routeRef = mPlacePage.findViewById(R.id.ll__place_route_ref);
+    final boolean hasRouteRefs = routeRef != null && routeRef.getVisibility() == View.VISIBLE;
+    if (mMapObject != null && mMapObject.getOpeningMode() == MapObject.OPENING_MODE_PREVIEW_PLUS && !hasRouteRefs)
+    {
+      peekHeight += plusDetailsContainer.getHeight();
+    }
+    final int topInset =
+        (mCurrentWindowInsets != null) ? mCurrentWindowInsets.getInsets(WindowInsetsCompat.Type.systemBars()).top : 0;
+    return Math.min(peekHeight + (isLandscape ? bottomInsets : 0), mCoordinator.getHeight() - topInset);
+  }
+
+  @Override
+  public void onPlacePageContentChanged(int previewHeight, int frameHeight)
+  {
+    mPreviewHeight = previewHeight;
+    mFrameHeight = frameHeight;
+    mViewModel.setPlacePageWidth(mPlacePage.getWidth());
+    // Make sure to update the peek height on the UI thread to prevent weird animation jumps
+    // TODO(AB): Investigate if this post is still necessary.
+    mPlacePage.post(() -> {
+      // Fragment may be detached when posting the runnable.
+      if (!isAdded())
+        return;
+
+      setPeekHeight();
+      if (mShouldCollapse && !PlacePageUtils.isCollapsedState(mPlacePageBehavior.getState()))
+      {
+        mEasyDismissEnabled = false;
+        mPlacePageBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+        // Make sure to reset the scroll position when opening the place page
+        if (mPlacePage.getScrollY() != 0)
+          mPlacePage.setScrollY(0);
+      }
+      mShouldCollapse = false;
+    });
+  }
+
+  @Override
+  public void onPlacePageRequestToggleState()
+  {
+    @BottomSheetBehavior.State
+    int state = mPlacePageBehavior.getState();
+    stopCustomPeekHeightAnimation();
+    if (PlacePageUtils.isExpandedState(state))
+      mPlacePageBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+    else
+      mPlacePageBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+  }
+
+  @Override
+  public void onPlacePageRequestClose()
+  {
+    mPlacePageBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
+  }
+
+  @Override
+  public void onPlacePageButtonClick(PlacePageButtons.ButtonType item)
+  {
+    switch (item)
+    {
+    case BOOKMARK_SAVE, BOOKMARK_DELETE -> onBookmarkBtnClicked();
+    case TRACK_DELETE -> onTrackRemoveClicked();
+    case TRACK_RECORDING_SAVE -> mPlacePageListener.onTrackRecordingSaved();
+    case TRACK_RECORDING_DELETE -> mPlacePageListener.onTrackRecordingCancelled();
+    case BACK -> onBackBtnClicked();
+    case ROUTE_FROM -> onRouteFromBtnClicked();
+    case ROUTE_TO -> onRouteToBtnClicked();
+    case ROUTE_ADD -> onRouteAddBtnClicked();
+    case ROUTE_REPLACE -> onRouteReplaceBtnClicked();
+    case ROUTE_REMOVE -> onRouteRemoveBtnClicked();
+    case ROUTE_AVOID_TOLL -> onAvoidTollBtnClicked();
+    case ROUTE_AVOID_UNPAVED -> onAvoidUnpavedBtnClicked();
+    case ROUTE_AVOID_FERRY -> onAvoidFerryBtnClicked();
+    }
+  }
+
+  private void onBookmarkBtnClicked()
+  {
+    // mMapObject is set to null when the place page closes
+    // We don't want users to interact with the buttons when the PP is closing
+    if (mMapObject == null)
+      return;
+    // No need to call setMapObject here as the native methods will reopen the place page
+    if (mMapObject.isBookmark())
+      Framework.nativeDeleteBookmarkFromMapObject();
+    else
+      BookmarkManager.INSTANCE.addNewBookmark(mMapObject.getLat(), mMapObject.getLon());
+  }
+
+  private void onTrackRemoveClicked()
+  {
+    // mMapObject is set to null when the place page closes
+    // We don't want users to interact with the buttons when the PP is closing
+    if (mMapObject == null)
+      return;
+    showTrackDeleteAlertDialog();
+  }
+
+  void showTrackDeleteAlertDialog()
+  {
+    if (!(mMapObject instanceof Track track))
+    {
+      dismissAlertDialog();
+      return;
+    }
+    final long trackId = track.getTrackId();
+    dismissAlertDialog();
+    mViewModel.isAlertDialogShowing = true;
+    if (mAlertDialog != null)
+    {
+      mAlertDialog.show();
+      return;
+    }
+    mAlertDialog =
+        new MaterialAlertDialogBuilder(requireContext(), R.style.MwmTheme_AlertDialog)
+            .setTitle(requireContext().getString(R.string.delete_track_dialog_title, track.getTitle()))
+            .setCancelable(true)
+            .setNegativeButton(R.string.cancel, null)
+            .setPositiveButton(R.string.delete, (dialog, which) -> BookmarkManager.INSTANCE.deleteTrack(trackId))
+            .setOnDismissListener(dialog -> dismissAlertDialog())
+            .show();
+  }
+
+  void dismissAlertDialog()
+  {
+    mViewModel.isAlertDialogShowing = false;
+    if (mAlertDialog != null)
+      mAlertDialog.dismiss();
+  }
+
+  private void onBackBtnClicked()
+  {
+    if (mMapObject == null)
+      return;
+    final Intent result = new Intent();
+    result.putExtra(Const.EXTRA_POINT_LAT, mMapObject.getLat())
+        .putExtra(Const.EXTRA_POINT_LON, mMapObject.getLon())
+        .putExtra(Const.EXTRA_POINT_NAME, mMapObject.getTitle())
+        .putExtra(Const.EXTRA_POINT_ID, mMapObject.getApiId())
+        .putExtra(Const.EXTRA_ZOOM_LEVEL, Framework.nativeGetDrawScale());
+    requireActivity().setResult(Activity.RESULT_OK, result);
+    requireActivity().finish();
+  }
+
+  private void onRouteFromBtnClicked()
+  {
+    if (mMapObject == null)
+      return;
+    RoutingController controller = RoutingController.get();
+    if (!controller.isPlanning())
+    {
+      controller.prepare(mMapObject, null);
+      close();
+    }
+    else
+      commitRoutePoint(RouteMarkType.Start, mMapObject);
+  }
+
+  private void onRouteToBtnClicked()
+  {
+    if (mMapObject == null)
+      return;
+    if (RoutingController.get().isPlanning())
+      commitRoutePoint(RouteMarkType.Finish, mMapObject);
+    else
+      ((MwmActivity) requireActivity()).startLocationToPoint(mMapObject);
+  }
+
+  private void commitRoutePoint(@NonNull RouteMarkType type, @NonNull MapObject point)
+  {
+    // Close search up front: dismissing this place page (via close() below, or via the route build's
+    // native place-page deactivation when both endpoints are set) resurfaces the still-enabled search
+    // sheet hidden behind it over the route plan card.
+    ((MwmActivity) requireActivity()).forceCloseSearchFragment();
+    final RoutingController controller = RoutingController.get();
+    switch (type)
+    {
+    case Start -> controller.setStartPoint(point);
+    case Finish -> controller.setEndPoint(point);
+    case Intermediate -> throw new AssertionError("Intermediate points are committed via addStop, not here");
+    }
+    close();
+  }
+
+  private void onRouteReplaceBtnClicked()
+  {
+    if (mMapObject != null)
+      RoutingController.get().replaceStop(mMapObject);
+  }
+
+  private void onRouteAddBtnClicked()
+  {
+    if (mMapObject != null)
+      RoutingController.get().addStop(mMapObject);
+  }
+
+  private void onRouteRemoveBtnClicked()
+  {
+    if (mMapObject != null)
+      RoutingController.get().removeStop(mMapObject);
+  }
+
+  private void onAvoidUnpavedBtnClicked()
+  {
+    onAvoidBtnClicked(RoadType.Dirty);
+  }
+
+  private void onAvoidFerryBtnClicked()
+  {
+    onAvoidBtnClicked(RoadType.Ferry);
+  }
+
+  private void onAvoidTollBtnClicked()
+  {
+    onAvoidBtnClicked(RoadType.Toll);
+  }
+
+  private void onAvoidBtnClicked(@NonNull RoadType roadType)
+  {
+    if (mMapObject != null)
+      mPlacePageListener.onPlacePageRequestToggleRouteSettings(roadType);
+  }
+
+  private void removePlacePageFragments()
+  {
+    final FragmentManager fm = getChildFragmentManager();
+    final Fragment placePageButtonsFragment = fm.findFragmentByTag(PLACE_PAGE_BUTTONS_FRAGMENT_TAG);
+    final Fragment placePageFragment = fm.findFragmentByTag(PLACE_PAGE_FRAGMENT_TAG);
+
+    if (placePageButtonsFragment != null || placePageFragment != null)
+    {
+      final var transaction = fm.beginTransaction();
+      if (placePageButtonsFragment != null)
+        transaction.remove(placePageButtonsFragment);
+      if (placePageFragment != null)
+        transaction.remove(placePageFragment);
+      transaction.commitNowAllowingStateLoss();
+    }
+    mViewModel.setMapObject(null);
+  }
+
+  private void createPlacePageFragments()
+  {
+    final FragmentManager fm = getChildFragmentManager();
+    final boolean needPlacePage = fm.findFragmentByTag(PLACE_PAGE_FRAGMENT_TAG) == null;
+    final boolean needButtons = fm.findFragmentByTag(PLACE_PAGE_BUTTONS_FRAGMENT_TAG) == null;
+
+    if (needPlacePage || needButtons)
+    {
+      final var transaction = fm.beginTransaction().setReorderingAllowed(true);
+      if (needPlacePage)
+        transaction.add(R.id.placepage_fragment, PlacePageView.class, null, PLACE_PAGE_FRAGMENT_TAG);
+      if (needButtons)
+        transaction.add(R.id.pp_buttons_fragment, PlacePageButtons.class, null, PLACE_PAGE_BUTTONS_FRAGMENT_TAG);
+      transaction.commit();
+    }
+  }
+
+  private void updateButtons(MapObject mapObject, boolean showBackButton, boolean showRoutingButton)
+  {
+    List<PlacePageButtons.ButtonType> buttons = new ArrayList<>();
+    PlacePageButtons.ButtonType roadAvoidButton = toPlacePageButton(mapObject.getRoadWarningMarkType());
+    if (roadAvoidButton != null)
+    {
+      buttons.add(roadAvoidButton);
+    }
+    else if (RoutingController.get().isRoutePoint(mapObject))
+    {
+      buttons.add(PlacePageButtons.ButtonType.ROUTE_REMOVE);
+    }
+    else
+    {
+      if (showBackButton)
+        buttons.add(PlacePageButtons.ButtonType.BACK);
+
+      boolean needToShowRoutingButtons =
+          (RoutingController.get().isPlanning() || showRoutingButton) && !mapObject.isTrackRecording();
+
+      // The single-action branch below is only meaningful for an intermediate-stop pick (replace an
+      // existing stop or add a new one). For a Start/Finish pick (e.g. opened from the plan sheet's
+      // partial-slot row when the start or destination is missing) it would hide ROUTE_FROM/ROUTE_TO
+      // and leave only the bookmark button, so fall through to the regular routing buttons in that case.
+      final boolean isIntermediateStopPick =
+          RoutingController.get().isWaitingPoiPick()
+          && (RoutingController.get().isPoiPickReplaceStop()
+              || RoutingController.get().getWaitingPoiPickType() == RouteMarkType.Intermediate);
+      if (isIntermediateStopPick)
+      {
+        if (RoutingController.get().isPoiPickReplaceStop())
+        {
+          buttons.add(PlacePageButtons.ButtonType.ROUTE_REPLACE);
+        }
+        else if (RoutingController.get().isStopPointAllowed())
+        {
+          buttons.add(PlacePageButtons.ButtonType.ROUTE_ADD);
+        }
+        buttons.add(mapObject.isBookmark() ? PlacePageButtons.ButtonType.BOOKMARK_DELETE
+                                           : PlacePageButtons.ButtonType.BOOKMARK_SAVE);
+      }
+      else
+      {
+        if (needToShowRoutingButtons)
+          buttons.add(PlacePageButtons.ButtonType.ROUTE_FROM);
+
+        // If we can show the add route button, put it in the place of the bookmark button
+        // And move the bookmark button at the end
+        if (needToShowRoutingButtons && RoutingController.get().isStopPointAllowed())
+          buttons.add(PlacePageButtons.ButtonType.ROUTE_ADD);
+        else if (mapObject.isTrackRecording())
+        {
+          buttons.add(PlacePageButtons.ButtonType.TRACK_RECORDING_DELETE);
+          if (!TrackRecorder.nativeIsTrackRecordingEmpty())
+            buttons.add(PlacePageButtons.ButtonType.TRACK_RECORDING_SAVE);
+        }
+        else
+        {
+          buttons.add(mapObject.isBookmark() ? PlacePageButtons.ButtonType.BOOKMARK_DELETE
+                                             : PlacePageButtons.ButtonType.BOOKMARK_SAVE);
+          if (mapObject.isTrack() && !((Track) mapObject).isRelationTrack())
+            buttons.add(PlacePageButtons.ButtonType.TRACK_DELETE);
+        }
+
+        if (needToShowRoutingButtons)
+        {
+          buttons.add(PlacePageButtons.ButtonType.ROUTE_TO);
+          if (RoutingController.get().isStopPointAllowed())
+            buttons.add(mapObject.isBookmark() ? PlacePageButtons.ButtonType.BOOKMARK_DELETE
+                                               : PlacePageButtons.ButtonType.BOOKMARK_SAVE);
+        }
+      }
+    }
+    mViewModel.setCurrentButtons(buttons);
+  }
+
+  @Override
+  public void onChanged(@Nullable MapObject mapObject)
+  {
+    final Activity activity = requireActivity();
+    final Intent intent = activity.getIntent();
+    final boolean showBackButton =
+        (intent != null
+         && (Factory.isStartedForApiResult(intent) || !TextUtils.isEmpty(Framework.nativeGetParsedBackUrl())));
+    mMapObject = mapObject;
+    if (mapObject != null)
+    {
+      setPlacePageInteractions(true);
+
+      // Notify the host that the place page is now active so it can hide overlays (e.g. routing sheet).
+      mPlacePageListener.onPlacePageActiveChanged(true);
+
+      // Only collapse the place page if the data is different from the one already available
+      mShouldCollapse = PlacePageUtils.isHiddenState(mPlacePageBehavior.getState())
+                     || !MapObject.same(mPreviousMapObject, mMapObject);
+      mPreviousMapObject = mMapObject;
+      // Place page will automatically open when the bottom sheet content is loaded so we can compute the peek height
+      createPlacePageFragments();
+      updateButtons(mapObject, showBackButton, !(mMapObject.isMyPosition() || mMapObject.isTrackRecording()));
+      mAlertDialog = null;
+      if (mViewModel.isAlertDialogShowing)
+        showTrackDeleteAlertDialog();
+      if (mMapObject.isTrackRecording())
+        onTrackRecordingSelected();
+    }
+    else
+    {
+      // The track deletion confirmation needs the current selection.
+      dismissAlertDialog();
+      close();
+    }
+  }
+
+  @Override
+  public void onStart()
+  {
+    super.onStart();
+    mPlacePageBehavior.addBottomSheetCallback(mDefaultBottomSheetCallback);
+    mViewModel.getMapObject().observe(requireActivity(), this);
+  }
+
+  @Override
+  public void onResume()
+  {
+    super.onResume();
+    if (mPlacePageBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN && !Framework.nativeHasPlacePageInfo())
+      mViewModel.setMapObject(null);
+  }
+
+  @Override
+  public void onDestroyView()
+  {
+    if (mCustomPeekHeightAnimator != null)
+    {
+      mCustomPeekHeightAnimator.cancel();
+      mCustomPeekHeightAnimator = null;
+    }
+    super.onDestroyView();
+  }
+
+  @Override
+  public void onStop()
+  {
+    super.onStop();
+    mPlacePageBehavior.removeBottomSheetCallback(mDefaultBottomSheetCallback);
+    mViewModel.getMapObject().removeObserver(this);
+  }
+
+  public interface PlacePageListener
+  {
+    void onPlacePageRequestToggleRouteSettings(@NonNull RoadType roadType);
+    void onTrackRecordingSaved();
+    void onTrackRecordingCancelled();
+    void onPlacePageActiveChanged(boolean active);
+  }
+}

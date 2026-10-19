@@ -58,7 +58,7 @@
         android:layout_gravity="center"
         android:visibility="gone"
         tools:visibility="visible"/>
-      <app.organicmaps.widget.WheelProgressView
+      <app.alhaswamagellan.widget.WheelProgressView
         android:id="@+id/wheel_downloader_progress"
         android:layout_width="@dimen/downloader_status_size"
         android:layout_height="@dimen/downloader_status_size"

@@ -17,17 +17,17 @@
 ## JNI bridge pattern
 Java native methods in `Framework.java` / `AlHaswaMagellan.java` map to C++ in `sdk/src/main/cpp/`:
 ```java
-// Java side (sdk/src/main/java/app/organicmaps/sdk/Framework.java):
+// Java side (sdk/src/main/java/app/alhaswamagellan/sdk/Framework.java):
 public static native int nativeGetDrawScale();
 ```
 ```cpp
 // C++ side (sdk/src/main/cpp/...):
-JNIEXPORT jint Java_app_organicmaps_sdk_Framework_nativeGetDrawScale(JNIEnv * env, jclass)
+JNIEXPORT jint Java_app_alhaswamagellan_sdk_Framework_nativeGetDrawScale(JNIEnv * env, jclass)
 {
   return static_cast<jint>(GetFramework().GetDrawScale());
 }
 // String conversion: jni::ToNativeString(env, jstring), jni::ToJavaString(env, char const *)
-// JNI helpers: sdk/src/main/cpp/app/organicmaps/sdk/core/jni_helper.hpp
+// JNI helpers: sdk/src/main/cpp/app/alhaswamagellan/sdk/core/jni_helper.hpp
 ```
 
 ## Activity lifecycle

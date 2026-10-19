@@ -7,16 +7,16 @@
   android:orientation="vertical"
   android:padding="@dimen/margin_base">
   <!-- Title bar -->
-  <app.organicmaps.widget.ShimmerBarView
+  <app.alhaswamagellan.widget.ShimmerBarView
     android:layout_width="200dp"
     android:layout_height="14dp" />
   <!-- Description bar -->
-  <app.organicmaps.widget.ShimmerBarView
+  <app.alhaswamagellan.widget.ShimmerBarView
     android:layout_width="140dp"
     android:layout_height="10dp"
     android:layout_marginTop="@dimen/margin_quarter" />
   <!-- Region / distance bar -->
-  <app.organicmaps.widget.ShimmerBarView
+  <app.alhaswamagellan.widget.ShimmerBarView
     android:layout_width="100dp"
     android:layout_height="10dp"
     android:layout_marginTop="@dimen/margin_quarter" />

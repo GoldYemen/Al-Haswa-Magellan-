@@ -6,7 +6,7 @@ package org.chromium.base;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import app.organicmaps.sdk.util.Assert;
+import app.alhaswamagellan.sdk.util.Assert;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

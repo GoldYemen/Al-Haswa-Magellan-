@@ -125,7 +125,7 @@
         android:textColor="?android:textColorPrimary"
         android:textStyle="bold" />
 
-      <app.organicmaps.widget.DonationView
+      <app.alhaswamagellan.widget.DonationView
           android:id="@+id/donate"
           android:layout_marginStart="@dimen/margin_base"
           android:layout_marginEnd="@dimen/margin_base"

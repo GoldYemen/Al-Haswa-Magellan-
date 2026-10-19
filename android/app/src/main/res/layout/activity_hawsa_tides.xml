@@ -62,7 +62,7 @@
         android:paddingBottom="4dp" />
 
     <!-- Tide chart -->
-    <app.organicmaps.hawsa.TideChartView
+    <app.alhaswamagellan.hawsa.TideChartView
         android:id="@+id/tide_chart"
         android:layout_width="match_parent"
         android:layout_height="0dp"
