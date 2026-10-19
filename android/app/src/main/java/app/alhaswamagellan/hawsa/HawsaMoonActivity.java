@@ -174,26 +174,6 @@ public class HawsaMoonActivity extends AppCompatActivity
     tvAge.setPadding(0, 0, 0, dp(12));
     infoCard.addView(tvAge);
 
-    // High-precision astronomical details (Meeus / ELP-2000 based)
-    MoonCalculator.MoonDetails details = MoonCalculator.getMoonDetails(timeMillis);
-
-    TextView tvDistance = new TextView(this);
-    tvDistance.setText(String.format(Locale.US, "المسافة عن الأرض: %,.0f كم", details.distanceKm));
-    tvDistance.setTextSize(14);
-    tvDistance.setTextColor(COLOR_TEXT_DIM);
-    tvDistance.setGravity(Gravity.CENTER);
-    tvDistance.setPadding(0, 0, 0, dp(2));
-    infoCard.addView(tvDistance);
-
-    TextView tvCoords = new TextView(this);
-    tvCoords.setText(String.format(Locale.US,
-        "المطلع المستقيم: %.2f°  |  الميل: %.2f°", details.ra, details.dec));
-    tvCoords.setTextSize(13);
-    tvCoords.setTextColor(COLOR_TEXT_DIM);
-    tvCoords.setGravity(Gravity.CENTER);
-    tvCoords.setPadding(0, 0, 0, dp(12));
-    infoCard.addView(tvCoords);
-
     // Separator
     infoCard.addView(createSeparator());
 

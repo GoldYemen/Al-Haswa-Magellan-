@@ -110,11 +110,11 @@ public class HawsaTidesActivity extends AppCompatActivity
       textColor = 0xFF10B981; // green
       break;
     case "HIGH":
-      statusText = "\u0645\u062F \u0639\u0627\u0644\u064A \u25CF"; // مد عالي ●
+      statusText = "\u0645\u062F \u0645\u0645\u0644\u064A \u25CF"; // مد مملي ●
       textColor = 0xFF10B981; // green
       break;
     case "FALLING":
-      statusText = "\u062C\u0632\u0631 \u0645\u0627\u062D\u0628 \u2193"; // جزر ماحب ↓
+      statusText = "\u062C\u0632\u0631 \u0646\u0627\u0632\u0644 \u2193"; // جزر نازل ↓
       textColor = 0xFFEF4444; // red
       break;
     case "LOW":
@@ -249,7 +249,7 @@ public class HawsaTidesActivity extends AppCompatActivity
 
       if (day.firstHigh != null)
       {
-        sb.append("  \u0645\u062F \u0639\u0627\u0644\u064A: ").append(formatEventTime(day.firstHigh)); // المد العالي:
+        sb.append("  \u0645\u062F \u0645\u0645\u0644\u064A: ").append(formatEventTime(day.firstHigh)); // مد مملي:
         sb.append(" (").append(String.format(Locale.US, "%.1fm", day.firstHigh.height)).append(")");
         if (day.secondHigh != null)
         {

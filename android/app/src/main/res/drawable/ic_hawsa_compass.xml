@@ -1,17 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (c) 2026 Al-Haswa Magellan -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="48dp"
     android:height="48dp"
     android:viewportWidth="24"
-    android:viewportHeight="24"
-    android:tint="#778DA9">
+    android:viewportHeight="24">
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM12,20c-4.41,0 -8,-3.59 -8,-8s3.59,-8 8,-8 8,3.59 8,8 -3.59,8 -8,8z"/>
+        android:fillType="evenOdd"
+        android:pathData="M2.1,12 A9.9,9.9 0 1 0 21.9,12 A9.9,9.9 0 1 0 2.1,12 Z M3.9,12 A8.1,8.1 0 1 0 20.1,12 A8.1,8.1 0 1 0 3.9,12 Z" />
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M15,9L9,15l-3,-6 6,-6z"/>
+        android:pathData="M11.5,1.3 h1.0 v2.4 h-1.0 Z" />
     <path
-        android:fillColor="#FF5252"
-        android:pathData="M12,6l-3,6 3,6 3,-6z"/>
+        android:fillColor="#FFFFFF"
+        android:pathData="M11.5,20.3 h1.0 v2.4 h-1.0 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M1.3,11.5 h2.4 v1.0 h-2.4 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20.3,11.5 h2.4 v1.0 h-2.4 Z" />
+    <path
+        android:fillColor="#E53935"
+        android:pathData="M12,4.8 L14.0,12.4 L10.0,12.4 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M12,19.2 L10.0,12.6 L14.0,12.6 Z" />
+    <path
+        android:fillColor="#E53935"
+        android:pathData="M10.65,12 A1.35,1.35 0 1 0 13.35,12 A1.35,1.35 0 1 0 10.65,12 Z" />
 </vector>

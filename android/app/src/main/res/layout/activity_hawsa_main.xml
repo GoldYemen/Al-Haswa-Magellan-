@@ -102,8 +102,7 @@
                             android:layout_width="34dp"
                             android:layout_height="34dp"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_hawsa_map"
-                            app:tint="#FFFFFF" />
+                            android:src="@drawable/ic_hawsa_map" />
                     </FrameLayout>
 
                     <View
@@ -169,8 +168,7 @@
                             android:layout_width="34dp"
                             android:layout_height="34dp"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_hawsa_tides"
-                            app:tint="#FFFFFF" />
+                            android:src="@drawable/ic_hawsa_tides" />
                     </FrameLayout>
 
                     <View
@@ -236,8 +234,7 @@
                             android:layout_width="34dp"
                             android:layout_height="34dp"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_hawsa_moon"
-                            app:tint="#FFFFFF" />
+                            android:src="@drawable/ic_hawsa_moon" />
                     </FrameLayout>
 
                     <View
@@ -303,8 +300,7 @@
                             android:layout_width="34dp"
                             android:layout_height="34dp"
                             android:layout_gravity="center"
-                            android:src="@drawable/ic_hawsa_compass"
-                            app:tint="#FFFFFF" />
+                            android:src="@drawable/ic_hawsa_compass" />
                     </FrameLayout>
 
                     <View
