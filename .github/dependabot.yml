@@ -1,0 +1,16 @@
+# Keep GitHub Actions up to date so the workflows never silently fall behind
+# on a retired action runtime again (e.g. the Node 20 -> Node 24 migration).
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
