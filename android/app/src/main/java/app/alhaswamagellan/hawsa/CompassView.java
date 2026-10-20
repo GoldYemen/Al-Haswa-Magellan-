@@ -158,12 +158,12 @@ public class CompassView extends View implements SensorEventListener
 
     // Degree text
     degreeTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    degreeTextPaint.setTextSize(11f);
+    degreeTextPaint.setTextSize(15f);
     degreeTextPaint.setColor(COLOR_DEGREE_TEXT);
     degreeTextPaint.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
 
     degreeTextMajorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    degreeTextMajorPaint.setTextSize(13f);
+    degreeTextMajorPaint.setTextSize(17f);
     degreeTextMajorPaint.setColor(COLOR_DEGREE_TEXT_MAJOR);
     degreeTextMajorPaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
 
@@ -178,28 +178,28 @@ public class CompassView extends View implements SensorEventListener
 
     // Latin cardinal labels
     cardinalLatinPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    cardinalLatinPaint.setTextSize(22f);
+    cardinalLatinPaint.setTextSize(28f);
     cardinalLatinPaint.setTypeface(Typeface.create("sans-serif-bold", Typeface.BOLD));
     cardinalLatinPaint.setColor(COLOR_CARDINAL_LATIN);
 
     // Arabic cardinal labels
     cardinalArN = new Paint(Paint.ANTI_ALIAS_FLAG);
-    cardinalArN.setTextSize(11f);
+    cardinalArN.setTextSize(14f);
     cardinalArN.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
     cardinalArN.setColor(COLOR_CARDINAL_AR);
 
     cardinalArE = new Paint(Paint.ANTI_ALIAS_FLAG);
-    cardinalArE.setTextSize(11f);
+    cardinalArE.setTextSize(14f);
     cardinalArE.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
     cardinalArE.setColor(COLOR_CARDINAL_AR);
 
     cardinalArS = new Paint(Paint.ANTI_ALIAS_FLAG);
-    cardinalArS.setTextSize(11f);
+    cardinalArS.setTextSize(14f);
     cardinalArS.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
     cardinalArS.setColor(COLOR_CARDINAL_AR);
 
     cardinalArW = new Paint(Paint.ANTI_ALIAS_FLAG);
-    cardinalArW.setTextSize(11f);
+    cardinalArW.setTextSize(14f);
     cardinalArW.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
     cardinalArW.setColor(COLOR_CARDINAL_AR);
 
@@ -213,7 +213,7 @@ public class CompassView extends View implements SensorEventListener
     qiblaGlowPaint.setColor(COLOR_QIBLA_GLOW);
 
     qiblaLabelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    qiblaLabelPaint.setTextSize(12f);
+    qiblaLabelPaint.setTextSize(15f);
     qiblaLabelPaint.setColor(COLOR_QIBLA_LABEL);
     qiblaLabelPaint.setTypeface(Typeface.create("sans-serif-medium", Typeface.BOLD));
 
@@ -238,7 +238,7 @@ public class CompassView extends View implements SensorEventListener
     headingPaint.setFakeBoldText(true);
 
     directionPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    directionPaint.setTextSize(18f);
+    directionPaint.setTextSize(21f);
     directionPaint.setColor(COLOR_DIRECTION_LABEL);
     directionPaint.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
 
@@ -442,9 +442,9 @@ public class CompassView extends View implements SensorEventListener
     float tick2Inner = dialRadius - 8f;
     float tick10Inner = dialRadius - 14f;
     float tick30Inner = dialRadius - 20f;
-    float cardinalCenter = dialRadius - 38f;
-    float degreeTextY = dialRadius - 16f;
-    float degreeTextMajorY = dialRadius - 20f;
+    float cardinalCenter = dialRadius - 48f;
+    float degreeTextY = dialRadius - 22f;
+    float degreeTextMajorY = dialRadius - 26f;
 
     // === Dense tick marks: every 2° ===
     for (int deg = 0; deg < 360; deg += 2)
@@ -506,7 +506,7 @@ public class CompassView extends View implements SensorEventListener
         "\u063A\u0631\u0628" // غرب
     };
     Paint[] bgPaints = {cardinalBgN, cardinalBgOther, cardinalBgOther, cardinalBgOther};
-    float circleRadius = 24f;
+    float circleRadius = 30f;
 
     for (int i = 0; i < 4; i++)
     {
@@ -518,18 +518,18 @@ public class CompassView extends View implements SensorEventListener
 
       // Latin letter (large, white, bold)
       canvas.save();
-      canvas.rotate(-(i * 90 - currentAzimuth), cx, cy - cardinalCenter - 3f);
+      canvas.rotate(-(i * 90 - currentAzimuth), cx, cy - cardinalCenter - 5f);
       float lw = cardinalLatinPaint.measureText(latinLabels[i]);
-      canvas.drawText(latinLabels[i], cx - lw / 2, cy - cardinalCenter + cardinalLatinPaint.descent() - 3f,
+      canvas.drawText(latinLabels[i], cx - lw / 2, cy - cardinalCenter + cardinalLatinPaint.descent() - 5f,
                       cardinalLatinPaint);
       canvas.restore();
 
       // Arabic label (small, below latin)
       canvas.save();
-      canvas.rotate(-(i * 90 - currentAzimuth), cx, cy - cardinalCenter + 13f);
+      canvas.rotate(-(i * 90 - currentAzimuth), cx, cy - cardinalCenter + 10f);
       Paint arPaint = (i == 0) ? cardinalArN : (i == 1) ? cardinalArE : (i == 2) ? cardinalArS : cardinalArW;
       float aw = arPaint.measureText(arabicLabels[i]);
-      canvas.drawText(arabicLabels[i], cx - aw / 2, cy - cardinalCenter + 13f + arPaint.descent(), arPaint);
+      canvas.drawText(arabicLabels[i], cx - aw / 2, cy - cardinalCenter + 10f + arPaint.descent(), arPaint);
       canvas.restore();
 
       canvas.restore();
@@ -569,19 +569,22 @@ public class CompassView extends View implements SensorEventListener
       canvas.save();
       canvas.rotate((float) qiblaBearing, cx, cy);
 
-      float glowR = 20f;
-      canvas.drawCircle(cx, cy - dialRadius + 6f, glowR, qiblaGlowPaint);
+      // Soft golden halo behind the arrow (enlarged)
+      float glowR = 30f;
+      canvas.drawCircle(cx, cy - dialRadius + 10f, glowR, qiblaGlowPaint);
 
+      // Large, prominent golden arrow (the main Qibla pointer)
       Path qPath = new Path();
-      float qBase = dialRadius - 12f;
-      float qTip = dialRadius + 6f;
-      qPath.moveTo(cx - 12f, cy - qBase);
+      float qBase = dialRadius - 11f;
+      float qTip = dialRadius + 15f;
+      qPath.moveTo(cx - 30f, cy - qBase);
       qPath.lineTo(cx, cy - qTip);
-      qPath.lineTo(cx + 12f, cy - qBase);
+      qPath.lineTo(cx + 30f, cy - qBase);
       qPath.close();
       canvas.drawPath(qPath, qiblaArrowPaint);
 
-      float ks = 5f;
+      // Kaaba cube at the tip (enlarged)
+      float ks = 9f;
       RectF kaabaRect = new RectF(cx - ks, cy - qTip - ks - 2f, cx + ks, cy - qTip + ks - 2f);
       canvas.drawRect(kaabaRect, kaabaPaint);
       Paint kaabaStripe = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -590,10 +593,10 @@ public class CompassView extends View implements SensorEventListener
       canvas.drawRect(new RectF(cx - ks, cy - qTip - 1f, cx + ks, cy - qTip + 1f), kaabaStripe);
 
       canvas.save();
-      canvas.rotate(-(float) qiblaBearing, cx, cy - qBase + 18f);
+      canvas.rotate(-(float) qiblaBearing, cx, cy - qBase + 22f);
       String qLabel = "\u0627\u0644\u0642\u0628\u0644\u0629";
       float qlw = qiblaLabelPaint.measureText(qLabel);
-      canvas.drawText(qLabel, cx - qlw / 2, cy - qBase + 24f, qiblaLabelPaint);
+      canvas.drawText(qLabel, cx - qlw / 2, cy - qBase + 30f, qiblaLabelPaint);
       canvas.restore();
 
       canvas.restore();
