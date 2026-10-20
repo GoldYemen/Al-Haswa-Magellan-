@@ -24,7 +24,7 @@ import java.util.TimeZone;
  *  - High/Low markers with smart label positioning
  *    (time above peak, height below peak for HIGH;
  *     time below trough, height above trough for LOW)
- *  - Current time indicator with glow dot
+ *  - Current time indicator with glow dot (time label centred above the line)
  *  - Rising/Falling badge
  *  - All time labels use English AM/PM (NOT Arabic ص/م)
  *  - Height unit label uses "m" (NOT Arabic "م")
@@ -140,7 +140,7 @@ public class TideChartView extends View
 
     // Current time indicator label
     nowLabelPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-    nowLabelPaint.setTextSize(16f);
+    nowLabelPaint.setTextSize(20f);
     nowLabelPaint.setColor(COLOR_CURRENT);
     nowLabelPaint.setFakeBoldText(true);
 
@@ -375,13 +375,19 @@ public class TideChartView extends View
       nowDotPaint.setAlpha(255);
       canvas.drawCircle(cx, cy, 7f, nowDotPaint);
 
-      // Now label — English AM/PM format
+      // Now label — English AM/PM format, centred on the current-time line
       String nowLabel =
           String.format(Locale.US, "%d:%02d",
                         currentHour > 12 ? currentHour - 12 : (currentHour == 0 ? 12 : currentHour), currentMinute)
           + (currentHour >= 12 ? "PM" : "AM");
       nowLabelPaint.setAlpha(220);
-      canvas.drawText(nowLabel, cx - 24, padT - 6, nowLabelPaint);
+      float nowLabelW = nowLabelPaint.measureText(nowLabel);
+      float nowLabelX = cx - nowLabelW / 2f;
+      if (nowLabelX > w - 4f - nowLabelW)
+        nowLabelX = w - 4f - nowLabelW;
+      if (nowLabelX < 4f)
+        nowLabelX = 4f;
+      canvas.drawText(nowLabel, nowLabelX, padT - 6, nowLabelPaint);
     }
 
     // ===== Rising/Falling badge =====
