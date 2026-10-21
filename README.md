@@ -2,7 +2,8 @@
   <h1> الحسوة ماجلان</h1>
   <h3>AlHaswa Magellan</h3>
   <p>دليلك للملاحة واستكشاف البر والبحر</p>
-  <img width="192" height="192" alt="ic_launcher" src="https://github.com/user-attachments/assets/1660885e-d16c-43ff-943b-c9266db5246b" />
+  <img width="1024" height="1024" alt="1792433047845" src="https://github.com/user-attachments/assets/86278bd4-6b5e-4bd7-9ed5-c279c48e8e86" />
+
 
 </div>---
 
@@ -14,25 +15,30 @@
 
 -🌐 واجهة عربية: تجربة استخدام واضحة ومناسبة للمستخدم العربي.
 
-<img width="1080" height="2400" alt="Screenshot_2026-10-10-20-58-37-464_app organicmaps beta" src="https://github.com/user-attachments/assets/2164a872-8ee8-43e1-9391-2a9c4c0116a9" />
+<img width="1080" height="2400" alt="Screenshot_2026-10-21-16-17-56-277_app alhaswamagellan beta" src="https://github.com/user-attachments/assets/ac4c01f4-c1d3-4d02-b145-a915b7457a7f" />
+
 
 - 🗺️ الخرائط والملاحة: استكشاف الخرائط والبحث عن الأماكن والتنقل بين المواقع.
 - 📡 الخرائط دون اتصال: استخدام الخرائط التي تم تنزيلها مسبقًا دون الحاجة إلى اتصال بالإنترنت. 
   
-<img width="1080" height="2400" alt="Screenshot_2026-10-10-20-59-01-808_app organicmaps beta" src="https://github.com/user-attachments/assets/13a6af84-6ffc-4338-9411-eb6ecff9b9aa" />
+<img width="1080" height="2400" alt="Screenshot_2026-10-21-16-15-57-330_app alhaswamagellan beta" src="https://github.com/user-attachments/assets/57b4bc56-c3d5-423c-ae89-71271a4de908" />
+
  
 - 🌊 المد والجزر: عرض توقعات المد والجزر ومواعيد ارتفاع وانخفاض مستوى البحر.
   
-  <img width="1080" height="2400" alt="Screenshot_2026-10-10-20-59-19-485_app organicmaps beta" src="https://github.com/user-attachments/assets/333af538-7fe4-4448-a577-78389d1f4519" />
+  <img width="1080" height="2400" alt="Screenshot_2026-10-21-16-15-47-322_app alhaswamagellan beta" src="https://github.com/user-attachments/assets/b5e53fce-543e-4807-aae7-2549bcd45255" />
+
 
 - 🌙 أطوار القمر: عرض طور القمر وشكله ومعلوماته الفلكية.
 
-  <img width="1080" height="2400" alt="Screenshot_2026-10-10-20-59-25-194_app organicmaps beta" src="https://github.com/user-attachments/assets/30ac9241-4b21-48cd-a235-5856f0efda0b" />
+  <img width="1080" height="2400" alt="Screenshot_2026-10-21-16-15-40-948_app alhaswamagellan beta" src="https://github.com/user-attachments/assets/d0dc6f2c-9f2d-4df9-843e-0a4c9fc70efd" />
+
 
 - 🧭 البوصلة والقبلة: تحديد الاتجاهات والمساعدة في معرفة اتجاه القبلة.
 - 🕌 مواقيت الأذان: عرض أوقات الأذان وفقًا للموقع الجغرافي.
 
-<img width="1080" height="2400" alt="Screenshot_2026-10-10-20-59-42-068_app organicmaps beta" src="https://github.com/user-attachments/assets/7c0108a3-539c-4f06-9a3f-d7da680721d2" />
+<img width="1080" height="2400" alt="Screenshot_2026-10-21-16-15-21-758_app alhaswamagellan beta" src="https://github.com/user-attachments/assets/df667176-e1f7-454c-b71d-ff4345c0871b" />
+
 
 
 🎯 رؤية المشروع
