@@ -249,7 +249,9 @@ public class HawsaTidesActivity extends AppCompatActivity
 
       if (day.firstHigh != null)
       {
-        sb.append("  \u0645\u062F \u0645\u0645\u0644\u064A: ").append(formatEventTime(day.firstHigh)); // مد مملي:
+        sb.append("  ").append(getString(day.firstHigh.isFlat
+            ? R.string.hawsa_tides_flat_high : R.string.hawsa_tides_high_sharp)).append(": ");
+        sb.append(formatEventTime(day.firstHigh));
         sb.append(" (").append(String.format(Locale.US, "%.1fm", day.firstHigh.height)).append(")");
         if (day.secondHigh != null)
         {
@@ -261,9 +263,9 @@ public class HawsaTidesActivity extends AppCompatActivity
 
       if (day.firstLow != null)
       {
-        sb.append("  \u062C\u0632\u0631 \u0645\u0646\u062E\u0641\u0636: ")
-            .append(formatEventTime(day.firstLow)); // الجزر نازل:
-        sb.append(" (").append(String.format(Locale.US, "%.1fm", day.firstLow.height)).append(")");
+        sb.append("  ").append(getString(day.firstLow.isFlat
+            ? R.string.hawsa_tides_flat_low : R.string.hawsa_tides_low_sharp)).append(": ");
+        sb.append(formatEventTime(day.firstLow));
         if (day.secondLow != null)
         {
           sb.append(" | ").append(formatEventTime(day.secondLow));
@@ -306,16 +308,12 @@ public class HawsaTidesActivity extends AppCompatActivity
   /**
    * Format event time using English AM/PM (NOT Arabic ص/م).
    * Uses 12-hour format with English AM/PM suffix.
+   *
+   * Flat (stand) tides are shown as a time window because no single clock
+   * time is meaningful there — see TideCalculator.FLAT_GAP_METERS.
    */
   private String formatEventTime(TideCalculator.TideEvent event)
   {
-    Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT+3"));
-    cal.setTimeInMillis(event.timeMillis);
-    int h = cal.get(Calendar.HOUR);
-    if (h == 0)
-      h = 12;
-    int m = cal.get(Calendar.MINUTE);
-    String ap = cal.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM";
-    return String.format(Locale.US, "%d:%02d%s", h, m, ap);
+    return TideCalculator.formatEventLabel(event);
   }
 }

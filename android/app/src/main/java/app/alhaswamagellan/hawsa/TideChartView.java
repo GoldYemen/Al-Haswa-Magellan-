@@ -52,6 +52,11 @@ public class TideChartView extends View
   private int currentMinute;
   private boolean isRising = true;
 
+  // Midnight (local) of the day currently plotted, in epoch millis. Used so a
+  // flat/stand window that runs past midnight is still measured from this day's
+  // 00:00 instead of wrapping back and collapsing to zero width.
+  private long dayStartMillis = 0L;
+
   private float animProgress = 0f;
   private boolean animating = false;
 
@@ -155,6 +160,16 @@ public class TideChartView extends View
   {
     this.tidePoints = points;
     this.tideEvents = events;
+
+    if (day != null)
+    {
+      Calendar midnight = (Calendar) day.clone();
+      midnight.set(Calendar.HOUR_OF_DAY, 0);
+      midnight.set(Calendar.MINUTE, 0);
+      midnight.set(Calendar.SECOND, 0);
+      midnight.set(Calendar.MILLISECOND, 0);
+      this.dayStartMillis = midnight.getTimeInMillis();
+    }
 
     if (points != null && !points.isEmpty())
     {
@@ -305,15 +320,61 @@ public class TideChartView extends View
     if (tideEvents != null && animProgress >= 0.7f)
     {
       int markerAlpha = (int) (255 * Math.min(1f, (animProgress - 0.7f) / 0.3f));
+
+      // Flat ("stand") tides are drawn as a shaded band instead of a dot, so
+      // the user sees that the water simply stays at that level for a while.
+      Paint bandPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+      bandPaint.setStyle(Paint.Style.FILL);
+
       for (TideCalculator.TideEvent event : tideEvents)
       {
+        int color = event.isHigh ? COLOR_HIGH : COLOR_LOW;
+
+        if (event.isFlat)
+        {
+          // Hours measured from this day's 00:00, so a window that runs past
+          // midnight keeps growing instead of wrapping to a tiny/negative span.
+          float wsHour = (event.windowStartMillis - dayStartMillis) / 3600000.0f;
+          float weHour = (event.windowEndMillis - dayStartMillis) / 3600000.0f;
+
+          // Draw the part of the window that falls inside the 24 h axis; if the
+          // whole window is on the far side of midnight, clamp it to the edge.
+          float wsClamped = Math.max(0f, Math.min(24f, wsHour));
+          float weClamped = Math.max(0f, Math.min(24f, weHour));
+          if (weClamped < wsClamped)
+            weClamped = wsClamped;
+
+          float y = padT + chartH * (1.0f - ((float) event.height - minH) / hRange);
+          float left = padL + (chartW * wsClamped / 24.0f);
+          float right = padL + (chartW * weClamped / 24.0f);
+
+          bandPaint.setColor(color);
+          bandPaint.setAlpha((int) (48 * markerAlpha / 255f));
+          canvas.drawRect(left, padT, right, padT + chartH, bandPaint);
+
+          // Window line at the stand level
+          Paint linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+          linePaint.setColor(color);
+          linePaint.setAlpha(markerAlpha);
+          linePaint.setStrokeWidth(3f);
+          canvas.drawLine(left, y, right, y, linePaint);
+
+          // Label the window centred over the band
+          String windowLabel = TideCalculator.formatEventLabel(event);
+          highLowPaint.setColor(color);
+          highLowPaint.setAlpha(markerAlpha);
+          float tw = highLowPaint.measureText(windowLabel);
+          float cx = (left + right) / 2f;
+          float labelY = event.isHigh ? (y - 14f) : (y + 26f);
+          canvas.drawText(windowLabel, cx - tw / 2, labelY, highLowPaint);
+          continue;
+        }
+
         Calendar evtCal = Calendar.getInstance(TimeZone.getTimeZone("GMT+3"));
         evtCal.setTimeInMillis(event.timeMillis);
         float evtHour = evtCal.get(Calendar.HOUR_OF_DAY) + evtCal.get(Calendar.MINUTE) / 60.0f;
         float x = padL + (chartW * evtHour / 24.0f);
         float y = padT + chartH * (1.0f - ((float) event.height - minH) / hRange);
-
-        int color = event.isHigh ? COLOR_HIGH : COLOR_LOW;
 
         // Glow dot
         markerDotPaint.setColor(color);

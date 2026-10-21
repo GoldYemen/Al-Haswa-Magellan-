@@ -24,6 +24,13 @@
     <string name="hawsa_tides_meters">متر</string>
     <string name="hawsa_tides_time">الوقت</string>
     <string name="hawsa_tides_height">الارتفاع</string>
+    <!-- يُعرض بدل وقت حاد عندما يكون المدّ مسطّحًا (مدّان مرتفعان متساويان تقريبًا) -->
+    <string name="hawsa_tides_flat_high">مد مسطّح</string>
+    <string name="hawsa_tides_flat_low">جزر مسطّح</string>
+    <string name="hawsa_tides_flat_window">الماء شبه ثابت</string>
+    <!-- الوصفان العاديان لأحداث المدّ والجزر عندما يكون الوقت حادًّا ومعنويًّا -->
+    <string name="hawsa_tides_high_sharp">مد مملي</string>
+    <string name="hawsa_tides_low_sharp">جزر منخفض</string>
 
     <!-- Hawsa Compass -->
     <string name="hawsa_compass_title">البوصلة والقبلة</string>

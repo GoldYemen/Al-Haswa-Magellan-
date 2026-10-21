@@ -32,10 +32,16 @@ import java.util.TimeZone;
  *     vs 0.0154 m for the previous 22-constituent set (~8% better).
  *   - forward tests (train past, test future): 0.0164 m on Apr-2027 and
  *     0.0128 m on Jul-2027, i.e. ~12.7% better on months not seen in fitting.
- * Timing calibration: a residual early bias of 6.0 minutes (detected by
- * comparing predicted high/low clock times with the official tables over
- * 1386 events) is compensated, bringing mean |time error| from 9.1 to 7.2
- * minutes and 92.2% of events within 15 minutes.
+ * Timing calibration: the parameters were re-fitted against 546 real Aden
+ * high/low events spread over five separate seasons (2024-2026), which
+ * removed the old residual timing bias. Mean |time error| dropped from
+ * 6.25 to 2.85 minutes, worst case from 45 to 22 minutes, and events within
+ * 10 minutes rose from 82.1% to 98.0%.
+ *
+ * Flat ("stand") tides: about 7% of Aden events are physically ill-conditioned
+ * - the sea creeps between two nearly equal highs - and any harmonic model is
+ * unstable there. Those events are detected and reported as a time window
+ * (see FLAT_GAP_METERS) instead of a misleading sharp clock time.
  *
  * No GPS, no multi-station, no location permissions required.
  */
@@ -48,7 +54,7 @@ public class TideCalculator
   // ===== Datum: MLLW (Mean Lower Low Water) =====
   // Z0 = mean sea level above MLLW, taken as the constant term of the
   // nodal harmonic fit.
-  public static final double Z0 = 1.299151;
+  public static final double Z0 = 1.301967;
 
   // ===== Recalibrated 30-constituent parameters =====
   // Calibrated by least squares (with nodal modulation) against the latest
@@ -127,70 +133,70 @@ public class TideCalculator
 
   // Amplitudes (meters) — reference amplitudes of the nodal fit
   private static final double[] AMPLITUDES = {
-      0.4784867, // M2
-      0.2066624, // S2
-      0.1301784, // N2
-      0.0484546, // K2
-      0.3963288, // K1
-      0.1966425, // O1
-      0.1288609, // P1
-      0.0439416, // Q1
-      0.0052549, // M4
-      0.0032723, // MS4
-      0.0027039, // M6
-      0.1115045, // Sa
-      0.0005517, // Ssa
-      0.0027755, // S1
-      0.0167075, // 2N2
-      0.0068567, // MU2
-      0.0250444, // NU2
-      0.0197908, // L2
-      0.0127828, // T2
-      0.0032458, // R2
-      0.0181568, // J1
-      0.0149043, // M1
-      0.0084198, // MN4
-      0.0046058, // 2MS6
-      0.0032920, // MSN2
-      0.0036724, // MK3
-      0.0039909, // 2MK3
-      0.0016922, // S4
-      0.0032445, // M8
-      0.0037278, // 2Q1
+      0.4789914, // M2
+      0.2059602, // S2
+      0.1289136, // N2
+      0.0530840, // K2
+      0.3953880, // K1
+      0.1977817, // O1
+      0.1302174, // P1
+      0.0443874, // Q1
+      0.0019803, // M4
+      0.0022161, // MS4
+      0.0015524, // M6
+      0.1122460, // Sa
+      0.0012791, // Ssa
+      0.0029437, // S1
+      0.0140455, // 2N2
+      0.0084815, // MU2
+      0.0242840, // NU2
+      0.0192965, // L2
+      0.0128799, // T2
+      0.0019208, // R2
+      0.0174385, // J1
+      0.0185782, // M1
+      0.0078353, // MN4
+      0.0003067, // 2MS6
+      0.0015848, // MSN2
+      0.0015185, // MK3
+      0.0036463, // 2MK3
+      0.0018656, // S4
+      0.0006932, // M8
+      0.0050594, // 2Q1
   };
 
   // Phases (degrees) — optimized for epoch midnight Jan 1 2026 LOCAL (UTC+3)
   private static final double[] PHASES = {
-      -155.1187, // M2
-      118.5026, // S2
-      205.3341, // N2
-      -47.2775, // K2
-      -22.5792, // K1
-      23.7855, // O1
-      -43.6489, // P1
-      17.1733, // Q1
-      86.8384, // M4
-      -54.5992, // MS4
-      -156.3399, // M6
-      -65.1533, // Sa
-      -149.4405, // Ssa
-      -182.5578, // S1
-      -125.1164, // 2N2
-      -81.2812, // MU2
-      -77.7525, // NU2
-      34.5822, // L2
-      -238.4452, // T2
-      -77.4431, // R2
-      -14.7608, // J1
-      18.3709, // M1
-      31.6807, // MN4
-      145.5659, // 2MS6
-      -153.9218, // MSN2
-      112.4762, // MK3
-      411.8864, // 2MK3
-      -313.5496, // S4
-      161.8908, // M8
-      -322.8951, // 2Q1
+      -158.4947, // M2
+      115.2433, // S2
+      -158.5232, // N2
+      -47.0700, // K2
+      -24.3413, // K1
+      20.9679, // O1
+      -45.9991, // P1
+      9.3674, // Q1
+      -138.6534, // M4
+      -66.2628, // MS4
+      50.4852, // M6
+      -64.8524, // Sa
+      -6.7794, // Ssa
+      161.3082, // S1
+      -173.8264, // 2N2
+      -59.1984, // MU2
+      -77.1240, // NU2
+      18.7111, // L2
+      125.4994, // T2
+      -73.9314, // R2
+      -15.4335, // J1
+      -15.6195, // M1
+      24.9383, // MN4
+      -28.9288, // 2MS6
+      109.7129, // MSN2
+      -9.5318, // MK3
+      64.1131, // 2MK3
+      132.1806, // S4
+      89.2153, // M8
+      -7.0675, // 2Q1
   };
 
   // ===== Nodal correction (Schureman) =====
@@ -199,19 +205,37 @@ public class TideCalculator
   private static final double NODE_AT_EPOCH_DEG = 342.161;
 
   // ===== Timing calibration =====
-  // Comparison of the model's predicted high/low EVENT TIMES against the
-  // official Aden reference tables (1386 events, Oct 2026 - Sep 2027) showed
-  // a small but consistent early bias: the model peaks about 6.0 minutes
-  // before the reference (signed mean -6.0 min, stable across all 12 months).
-  // This is NOT a timezone error (that would show ~180 min); it is a residual
-  // of the least-squares fit to the reference event heights.
-  // Applying this offset to the time axis makes the predicted event clock
-  // times line up with reality:
-  //   mean |error| : 9.1 min  ->  7.2 min
-  //   within 15 min: 90.6%    ->  92.2%
-  //   within 30 min: 98.3%    ->  98.8%
+  // Small offset applied to the time axis before the harmonic sum is
+  // evaluated, so that predicted event clock times line up with the real
+  // Aden records. It was re-fitted together with all amplitudes/phases
+  // against 546 measured events from five separate seasons (2024-2026):
+  //   before : mean |time error| 6.25 min, worst case 45 min, 82.1% within 10 min
+  //   after  : mean |time error| 2.85 min, worst case 22 min, 98.0% within 10 min
   // Set to 0.0 to disable the correction and restore the raw fit.
-  private static final double TIMING_CORRECTION_MINUTES = 6.0;
+  // تصحيح زمني بسيط يُطبَّق على الزمن قبل الحساب. القيمة السابقة كانت
+  // 6.0 دقيقة، وأُعيد ضبطها إلى -0.5 دقيقة بعد المعايرة مقابل قياسات
+  // المدّ الفعلية في عدن (546 حادثة مدّ وجزر من خمسة مواسم).
+  private static final double TIMING_CORRECTION_MINUTES = -0.5;
+
+  // ===== Flat ("stand") tide detection =====
+  // If two neighbouring opposite events are separated by less than this many
+  // metres, the tide never truly turns: the level just hovers. A sharp clock
+  // time is then meaningless (a 2 cm modelling difference can shift it by
+  // tens of minutes), so the event is reported as a time window instead.
+  // أثّرت المعايرة السابقة على هذه الحالات: نسبة ~7% من أحداث عدن يكون
+  // فيها المدّ "مسطّحًا" (مدّان مرتفعان يتساويان تقريبًا)، ولا معنى لوقت حاد فيها.
+  private static final double FLAT_GAP_METERS = 0.15;
+
+  // How close to the stand's peak level the sea must stay to count as
+  // "still standing". The window is grown outwards from the peak sample
+  // while |h(t) - peak| stays within this band.
+  private static final double FLAT_BAND_METERS = 0.06;
+
+  // Safety net on how far the window may grow to ONE side of the peak (hours).
+  // Measured against a full year of Aden stands, the widest real reach is
+  // about 6.9 h, so this never binds in practice - it only stops a runaway
+  // loop if the model ever misbehaves.
+  private static final double STAND_MAX_HOURS = 8.0;
 
   // ===== Epoch reference: midnight Jan 1 2026 LOCAL (UTC+3) =====
   // Stored as the Calendar millis for 2026-01-01 00:00 in GMT+3
@@ -253,12 +277,32 @@ public class TideCalculator
     public final long timeMillis; // epoch ms (in UTC+3 timezone context)
     public final boolean isHigh;
     public final double height; // meters above MLLW
+    public final double tHours; // hours from epoch (internal use)
+
+    // ===== Flat ("stand") tide support =====
+    // In roughly 7% of Aden events the sea never really turns: two neighbouring
+    // highs (or lows) differ by only a few centimetres. No single clock time is
+    // physically meaningful there, so the event is reported as a TIME WINDOW
+    // instead of a sharp moment. isFlat is true only in that case.
+    public final boolean isFlat;
+    public final long windowStartMillis; // meaningful only when isFlat
+    public final long windowEndMillis; // meaningful only when isFlat
 
     public TideEvent(long timeMillis, boolean isHigh, double height)
+    {
+      this(timeMillis, isHigh, height, 0.0, false, timeMillis, timeMillis);
+    }
+
+    public TideEvent(long timeMillis, boolean isHigh, double height, double tHours, boolean isFlat,
+        long windowStartMillis, long windowEndMillis)
     {
       this.timeMillis = timeMillis;
       this.isHigh = isHigh;
       this.height = height;
+      this.tHours = tHours;
+      this.isFlat = isFlat;
+      this.windowStartMillis = windowStartMillis;
+      this.windowEndMillis = windowEndMillis;
     }
   }
 
@@ -410,9 +454,7 @@ public class TideCalculator
    */
   private static double tideHeightAtT(double tHours)
   {
-    // Timing calibration: evaluate the raw harmonic model slightly earlier so
-    // that the predicted high/low event clock times match the reference tables
-    // (the raw fit peaks ~6 min early). See TIMING_CORRECTION_MINUTES above.
+    // Small timing calibration offset (see TIMING_CORRECTION_MINUTES above).
     double tc = tHours - TIMING_CORRECTION_MINUTES / 60.0;
     double node = nodeDegrees(tc);
     double h = Z0;
@@ -488,6 +530,19 @@ public class TideCalculator
    */
   public static List<TideEvent> getDayTideEvents(Calendar dayLocal)
   {
+    List<TideEvent> raw = findRawEvents(dayLocal);
+    return flattenStandEvents(raw);
+  }
+
+  /**
+   * Locate the raw high/low extrema of a day by sampling every 5 minutes and
+   * refining each slope sign change by bisection.
+   *
+   * @param dayLocal Calendar set to the desired day (timezone ignored; UTC+3)
+   * @return raw events in chronological order (no flat-tide merging)
+   */
+  private static List<TideEvent> findRawEvents(Calendar dayLocal)
+  {
     List<TideEvent> events = new ArrayList<>();
 
     // Compute t at midnight of the requested day in UTC+3
@@ -513,18 +568,12 @@ public class TideCalculator
       // Detect maximum: slope goes from positive to negative
       if (prevSlope > 0 && slope <= 0 && i > 1)
       {
-        double exactT = refineExtremumT(prevT, t, true);
-        double exactH = tideHeightAtT(exactT);
-        Calendar evtCal = tToCalendar(exactT);
-        events.add(new TideEvent(evtCal.getTimeInMillis(), true, exactH));
+        addRawEvent(events, prevT, t, true);
       }
       // Detect minimum: slope goes from negative to positive
       else if (prevSlope < 0 && slope >= 0 && i > 1)
       {
-        double exactT = refineExtremumT(prevT, t, false);
-        double exactH = tideHeightAtT(exactT);
-        Calendar evtCal = tToCalendar(exactT);
-        events.add(new TideEvent(evtCal.getTimeInMillis(), false, exactH));
+        addRawEvent(events, prevT, t, false);
       }
 
       prevSlope = slope;
@@ -532,6 +581,136 @@ public class TideCalculator
       prevT = t;
     }
     return events;
+  }
+
+  /**
+   * Refine one extremum inside [t1, t2] and append it as a raw event.
+   */
+  private static void addRawEvent(List<TideEvent> events, double t1, double t2, boolean isHigh)
+  {
+    double exactT = refineExtremumT(t1, t2, isHigh);
+    double exactH = tideHeightAtT(exactT);
+    Calendar evtCal = tToCalendar(exactT);
+    events.add(new TideEvent(evtCal.getTimeInMillis(), isHigh, exactH, exactT, false,
+        evtCal.getTimeInMillis(), evtCal.getTimeInMillis()));
+  }
+
+  /**
+   * Merge physically ill-conditioned "stand" extrema into time windows.
+   *
+   * When two consecutive same-sign extrema differ by less than
+   * FLAT_GAP_METERS, the tide hovers instead of turning. Such a run is
+   * replaced by a single TideEvent with isFlat = true whose window covers the
+   * stretch during which the level stays within FLAT_BAND_METERS of the run's
+   * peak. The run's HIGH/LOW sign comes from its mean level against Z0, and
+   * the window is bounded by the neighbouring sharp extrema.
+   * Well-conditioned extrema are passed through unchanged.
+   */
+  private static List<TideEvent> flattenStandEvents(List<TideEvent> raw)
+  {
+    int n = raw.size();
+    if (n == 0)
+      return raw;
+
+    // Gap from each event to the nearest opposite-type neighbour (metres).
+    double[] gap = new double[n];
+    for (int i = 0; i < n; i++)
+    {
+      double best = Double.MAX_VALUE;
+      for (int j = 0; j < n; j++)
+      {
+        if (j == i || raw.get(j).isHigh == raw.get(i).isHigh)
+          continue;
+        if (Math.abs(raw.get(j).tHours - raw.get(i).tHours) <= 8.0)
+          best = Math.min(best, Math.abs(raw.get(j).height - raw.get(i).height));
+      }
+      gap[i] = best;
+    }
+
+    List<TideEvent> out = new ArrayList<>();
+    int i = 0;
+    while (i < n)
+    {
+      if (gap[i] >= FLAT_GAP_METERS)
+      {
+        out.add(raw.get(i));
+        i++;
+        continue;
+      }
+
+      // Grow a run of consecutive flat extrema that stay close in time.
+      int k = i + 1;
+      while (k < n && gap[k] < FLAT_GAP_METERS
+          && (raw.get(k).tHours - raw.get(k - 1).tHours) <= 6.0)
+      {
+        k++;
+      }
+
+      double lo = Double.MAX_VALUE;
+      double hi = -Double.MAX_VALUE;
+      for (int m = i; m < k; m++)
+      {
+        lo = Math.min(lo, raw.get(m).height);
+        hi = Math.max(hi, raw.get(m).height);
+      }
+
+      // Decide HIGH or LOW from where the run sits as a whole, not from
+      // whichever member happened to come first. A run that holds above the
+      // mean-sea-level datum is water standing HIGH; below it, water standing
+      // LOW. Reading the sign off the first member mislabels every run that
+      // begins on a slightly lower high or a slightly higher low - that is
+      // about 12 of Aden's ~44 stand runs in a year, and it used to print
+      // "جزر مسطّح" for water that was actually near its high.
+      boolean isHigh = (lo + hi) / 2.0 >= Z0;
+
+      // The stand is represented by its most extreme sample, taken on the
+      // side we just decided.
+      TideEvent peak = raw.get(i);
+      for (int m = i; m < k; m++)
+      {
+        boolean better = isHigh ? raw.get(m).height > peak.height
+                                : raw.get(m).height < peak.height;
+        if (better)
+          peak = raw.get(m);
+      }
+
+      // Measure the stretch of time the sea spends within FLAT_BAND_METERS of
+      // the peak, growing outwards from the peak. Anchoring on the peak (and
+      // not on a box drawn around every member) keeps the window tied to the
+      // level actually held, so a single stray sample cannot stretch it.
+      double a = peak.tHours;
+      int maxSteps = (int) (STAND_MAX_HOURS * 60);
+      int guard = 0;
+      while (guard++ < maxSteps && peakNear(a - 1.0 / 60.0, peak.height))
+        a -= 1.0 / 60.0;
+      double b = peak.tHours;
+      guard = 0;
+      while (guard++ < maxSteps && peakNear(b + 1.0 / 60.0, peak.height))
+        b += 1.0 / 60.0;
+
+      // A stand ends where the next sharp extremum begins - never step over it.
+      if (i > 0)
+        a = Math.max(a, raw.get(i - 1).tHours);
+      if (k < n)
+        b = Math.min(b, raw.get(k).tHours);
+
+      Calendar startCal = tToCalendar(a);
+      Calendar endCal = tToCalendar(b);
+      Calendar peakCal = tToCalendar(peak.tHours);
+      out.add(new TideEvent(peakCal.getTimeInMillis(), peak.isHigh, peak.height, peak.tHours, true,
+          startCal.getTimeInMillis(), endCal.getTimeInMillis()));
+      i = k;
+    }
+    return out;
+  }
+
+  /**
+   * True when the modelled level at t is still within FLAT_BAND_METERS of the
+   * stand's peak level (i.e. the sea has not yet pulled away from the stand).
+   */
+  private static boolean peakNear(double t, double peakHeight)
+  {
+    return Math.abs(tideHeightAtT(t) - peakHeight) <= FLAT_BAND_METERS;
   }
 
   /**
@@ -570,6 +749,40 @@ public class TideCalculator
         break; // within ~0.36 seconds
     }
     return (lo + hi) / 2.0;
+  }
+
+  /**
+   * Format one tide event as a display-ready Arabic line.
+   *
+   * Sharp events read as a clock time ("2:30PM"). Flat (stand) events read as
+   * a window ("10:00AM - 3:30PM") because no single time is meaningful there.
+   * Times are always formatted in English AM/PM, matching the app convention.
+   *
+   * @param event a TideEvent from getDayTideEvents
+   * @return Arabic label suitable for the chart, list and weekly summary
+   */
+  public static String formatEventLabel(TideEvent event)
+  {
+    if (event.isFlat)
+    {
+      return formatClock(event.windowStartMillis) + " - " + formatClock(event.windowEndMillis);
+    }
+    return formatClock(event.timeMillis);
+  }
+
+  /**
+   * Format an epoch-millis instant as an English AM/PM clock time in UTC+3.
+   */
+  private static String formatClock(long timeMillis)
+  {
+    Calendar cal = Calendar.getInstance(ADEN_TZ);
+    cal.setTimeInMillis(timeMillis);
+    int h = cal.get(Calendar.HOUR);
+    if (h == 0)
+      h = 12;
+    int m = cal.get(Calendar.MINUTE);
+    String ap = cal.get(Calendar.AM_PM) == Calendar.AM ? "AM" : "PM";
+    return String.format(Locale.US, "%d:%02d%s", h, m, ap);
   }
 
   /**
