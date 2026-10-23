@@ -45,12 +45,15 @@ jobs:
     if: inputs.fdroid || inputs.google || inputs.huawei || inputs.web
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: write
     steps:
       - name: Checkout sources
         uses: actions/checkout@v6
         with:
-          fetch-depth: 100  # Enough to get all commits for the last day.
+          fetch-depth: 100
           ssh-key: ${{ secrets.RELEASE_SSH_KEY }}
+          persist-credentials: true
 
       - name: Tag
         id: tag
@@ -107,8 +110,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     permissions:
-      contents: write     # To publish the release on GitHub Releases.
-      discussions: write  # To publish the release on GitHub Discussions.
+      contents: write
+      discussions: write
     needs: [setup, tag]
     if: needs.setup.outputs.matrix != '[]'
     strategy:
@@ -125,7 +128,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v6
         with:
-          fetch-depth: 100 # enough to get all commits for the current day
+          fetch-depth: 100
           ref: 'refs/tags/${{ needs.tag.outputs.tag }}'
 
       - name: Check tag
