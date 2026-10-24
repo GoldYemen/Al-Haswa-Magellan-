@@ -317,15 +317,15 @@ jobs:
         if: ${{ matrix.flavor == 'google' }}
         uses: actions/upload-artifact@v7
         with:
-          name: AlHaswaMagellan-${{ needs.tag.outputs.code }}-google-release.aab
-          path: ./android/app/build/outputs/bundle/googleRelease/AlHaswaMagellan-${{ needs.tag.outputs.code }}-google-release.aab
+          name: Al-HaswaMagellan-${{ needs.tag.outputs.code }}-google-release.aab
+          path: ./android/app/build/outputs/bundle/googleRelease/Al-HaswaMagellan-${{ needs.tag.outputs.code }}-google-release.aab
 
       - name: Upload Huawei aab to GitHub artifacts
         if: ${{ matrix.flavor == 'huawei' }}
         uses: actions/upload-artifact@v7
         with:
-          name: AlHaswaMagellan-${{ needs.tag.outputs.code }}-huawei-release.aab
-          path: ./android/app/build/outputs/bundle/huaweiRelease/AlHaswaMagellan-${{ needs.tag.outputs.code }}-huawei-release.aab
+          name: Al-HaswaMagellan-${{ needs.tag.outputs.code }}-huawei-release.aab
+          path: ./android/app/build/outputs/bundle/huaweiRelease/Al-HaswaMagellan-${{ needs.tag.outputs.code }}-huawei-release.aab
 
       # Store publishing is disabled on purpose: the Google Play publisher
       # (com.github.triplet.play) and the Huawei AppGallery publisher
@@ -354,14 +354,14 @@ jobs:
         if: ${{ matrix.flavor == 'web' }}
         shell: bash
         working-directory: android/app/build/outputs/apk/web/release
-        run: sha256sum AlHaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk > AlHaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk.sha256sum
+        run: sha256sum Al-HaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk > Al-HaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk.sha256sum
 
       - name: Upload web release apk and its sha256sum to GitHub artifacts
         if: ${{ matrix.flavor == 'web' }}
         uses: actions/upload-artifact@v7
         with:
-          name: AlHaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk
-          path: ./android/app/build/outputs/apk/web/release/AlHaswaMagellan-${{ needs.tag.outputs.code }}-web-release.*
+          name: Al-HaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk
+          path: ./android/app/build/outputs/apk/web/release/Al-HaswaMagellan-${{ needs.tag.outputs.code }}-web-release.*
 
       - name: Prepare release notes
         if: ${{ matrix.flavor == 'web' }}
@@ -375,7 +375,7 @@ jobs:
             echo ""
             echo "sha256sum:"
             echo -e '\n```'
-            tr -d '\n' < ./android/app/build/outputs/apk/web/release/AlHaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk.sha256sum
+            tr -d '\n' < ./android/app/build/outputs/apk/web/release/Al-HaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk.sha256sum
             echo -e '\n```'
           } > ${{ runner.temp }}/release-notes.txt
 
@@ -389,6 +389,6 @@ jobs:
           tag_name: ${{ needs.tag.outputs.tag }}
           discussion_category_name: 'Announcements'
           files: |
-            ./android/app/build/outputs/apk/web/release/AlHaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk
-            ./android/app/build/outputs/apk/web/release/AlHaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk.sha256sum
+            ./android/app/build/outputs/apk/web/release/Al-HaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk
+            ./android/app/build/outputs/apk/web/release/Al-HaswaMagellan-${{ needs.tag.outputs.code }}-web-release.apk.sha256sum
           fail_on_unmatched_files: true
