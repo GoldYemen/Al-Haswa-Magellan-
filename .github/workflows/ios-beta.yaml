@@ -61,10 +61,63 @@ jobs:
         shell: bash
         run: |
           mkdir -p xcode/keys
-          echo "$PRIVATE_H" | base64 -d > private.h
-          echo "$APPSTORE_JSON" | base64 -d > xcode/keys/appstore.json
-          echo "$CERTIFICATES_DEV_P12" | base64 -d > xcode/keys/CertificatesDev.p12
-          echo "$CERTIFICATES_DISTR_P12" | base64 -d > xcode/keys/CertificatesDistr.p12
+
+          # Keep the checked-in private.h unless the secret decodes to valid base64 AND
+          # contains the required defines. An unset secret expands to an empty string and
+          # used to truncate private.h to 0 bytes, which broke the compile step.
+          if [[ -n "$PRIVATE_H" ]]; then
+            if echo "$PRIVATE_H" | base64 -d > private.h.candidate 2>/dev/null; then
+              if grep -q '^#define METASERVER_URL ' private.h.candidate &&
+                 grep -q '^#define DEFAULT_URLS_JSON ' private.h.candidate; then
+                mv private.h.candidate private.h
+                echo "Restored private.h from secret."
+              else
+                echo "PRIVATE_H secret missing required defines; keeping checked-in private.h"
+                rm -f private.h.candidate
+              fi
+            else
+              echo "PRIVATE_H is not valid base64; keeping checked-in private.h"
+              rm -f private.h.candidate 2>/dev/null || true
+            fi
+          else
+            echo "PRIVATE_H not set; keeping checked-in private.h"
+          fi
+
+          # Keys required to sign the build and upload it to TestFlight.
+          # They cannot be skipped silently: without them fastlane cannot sign the build,
+          # so collect everything that is missing and fail once with a clear message
+          # instead of leaving empty placeholder files behind.
+          MISSING=""
+
+          if [[ -n "$APPSTORE_JSON" ]] &&
+             echo "$APPSTORE_JSON" | base64 -d > xcode/keys/appstore.json.tmp 2>/dev/null &&
+             python3 -c "import json; json.load(open('xcode/keys/appstore.json.tmp'))" 2>/dev/null; then
+            mv xcode/keys/appstore.json.tmp xcode/keys/appstore.json
+            echo "Restored appstore.json from secret."
+          else
+            rm -f xcode/keys/appstore.json.tmp
+            MISSING="$MISSING APPSTORE_JSON"
+          fi
+
+          for entry in "CERTIFICATES_DEV_P12:CertificatesDev.p12" "CERTIFICATES_DISTR_P12:CertificatesDistr.p12"; do
+            secret_name="${entry%%:*}"
+            target_file="${entry##*:}"
+            secret_value="${!secret_name}"
+            if [[ -n "$secret_value" ]] &&
+               echo "$secret_value" | base64 -d > "xcode/keys/${target_file}.tmp" 2>/dev/null &&
+               [[ -s "xcode/keys/${target_file}.tmp" ]]; then
+              mv "xcode/keys/${target_file}.tmp" "xcode/keys/${target_file}"
+              echo "Restored ${target_file} from secret."
+            else
+              rm -f "xcode/keys/${target_file}.tmp"
+              MISSING="$MISSING $secret_name"
+            fi
+          done
+
+          if [[ -n "$MISSING" ]]; then
+            echo "::error::Missing or invalid repository secrets required for the iOS beta upload:$MISSING - add them under Settings > Secrets and variables > Actions (environment 'beta'), then run this workflow again."
+            exit 1
+          fi
         env:
           PRIVATE_H: ${{ secrets.PRIVATE_H }}
           APPSTORE_JSON: ${{ secrets.APPSTORE_JSON }}

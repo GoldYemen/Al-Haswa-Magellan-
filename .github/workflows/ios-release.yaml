@@ -20,7 +20,21 @@ jobs:
         shell: bash
         run: |
           mkdir -p xcode/keys
-          echo "$APPSTORE_JSON" | base64 -d > xcode/keys/appstore.json
+
+          # appstore.json is required to upload metadata, screenshots and builds.
+          # An unset secret expands to an empty string, which used to leave an empty
+          # placeholder file behind and fail later with a confusing error. Validate the
+          # secret and fail early with a clear message instead.
+          if [[ -n "$APPSTORE_JSON" ]] &&
+             echo "$APPSTORE_JSON" | base64 -d > xcode/keys/appstore.json.tmp 2>/dev/null &&
+             python3 -c "import json; json.load(open('xcode/keys/appstore.json.tmp'))" 2>/dev/null; then
+            mv xcode/keys/appstore.json.tmp xcode/keys/appstore.json
+            echo "Restored appstore.json from secret."
+          else
+            rm -f xcode/keys/appstore.json.tmp
+            echo "::error::Missing or invalid secret APPSTORE_JSON - add it under Settings > Secrets and variables > Actions (environment 'production'), then run this workflow again."
+            exit 1
+          fi
         env:
           APPSTORE_JSON: ${{ secrets.APPSTORE_JSON }}
 
