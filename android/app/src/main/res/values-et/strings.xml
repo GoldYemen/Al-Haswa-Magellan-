@@ -575,7 +575,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">Oma kaastöö automaatseks üleslaadimiseks palun logi OpenStreetMappi sisse. Lisateave <a href="https://github.com/organicmaps/organicmaps/issues/6144">leidub siin</a>.</string>
     <string name="dialog_error_storage_title">Andmeruumi ligipääsu probleem</string>
-    <string name="dialog_error_storage_message">Väline andmeruum pole juurdepääsetav. SD-kaart võib olla eemaldatud, kahjustatud või failisüsteem on kirjutuskaitstud. Palun kontrolli oma SD-kaarti või võta meiega ühendust aadressil support\@organicmaps.app</string>
+    <string name="dialog_error_storage_message">Väline andmeruum pole juurdepääsetav. SD-kaart võib olla eemaldatud, kahjustatud või failisüsteem on kirjutuskaitstud. Palun kontrolli oma SD-kaarti või võta meiega ühendust aadressil goldyemen711@gmail.com</string>
     <string name="setting_emulate_bad_storage">Imiteeri vigast andmeruumi</string>
     <string name="error_enter_correct_name">Palun sisesta korrektne nimi</string>
     <string name="bookmark_lists">Loendid</string>
@@ -787,7 +787,6 @@
     <!-- Telegram group url for the "?" About page -->
     <string name="telegram_url">https://t.me/AlHaswaMagellanApp</string>
     <!-- Instagram account url for the "?" About page -->
-    <string name="instagram_url">https://www.instagram.com/organicmaps.app</string>
     <!-- A link to the TTS FAQ -->
     <string name="tts_info_link">https://organicmaps.app/et/faq/voice/text-to-speech-android-tts/</string>
     <!-- Include only languages supported on the website, add new translations here: https://github.com/organicmaps/website/tree/master/content -->

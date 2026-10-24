@@ -254,7 +254,7 @@ private extension AboutController {
   }
 
   func buildInfoTableViewData() -> [AboutInfoTableViewCellModel] {
-    let infoContent: [AboutInfo] = [.faq, .reportMapDataProblem, .reportABug, .news, .volunteer, .rateTheApp]
+    let infoContent: [AboutInfo] = [.reportMapDataProblem, .reportABug, .news, .volunteer, .rateTheApp]
     return infoContent.map { [weak self] aboutInfo in
       AboutInfoTableViewCellModel(title: aboutInfo.title, image: aboutInfo.image, didTapHandler: {
         switch aboutInfo {
@@ -285,7 +285,6 @@ private extension AboutController {
         case .fosstodon: fallthrough
         case .facebook: fallthrough
         case .twitter: fallthrough
-        case .instagram: fallthrough
         case .linkedin: fallthrough
         case .tiktok: fallthrough
         case .threads: fallthrough

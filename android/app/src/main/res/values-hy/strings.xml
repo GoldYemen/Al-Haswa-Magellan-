@@ -575,7 +575,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">Խնդրում ենք մուտք գործել OpenStreetMap, որպեսզի Ձեր քարտեզի փոփոխությունները ավտոմատ վերբեռնվեն: Իմացեք ավելին <a href="https://github.com/organicmaps/organicmaps/issues/6144">այստեղ</a>:</string>
     <string name="dialog_error_storage_title">Հիշողության հասանելիության խնդիր</string>
-    <string name="dialog_error_storage_message">Արտաքին հիշողությունը հասանելի չէ։ SD քարտը գուցե հեռացված է, վնասված, կամ ֆայլային համակարգը միայն կարդալու համար է։ Խնդրում ենք ստուգել Ձեր SD քարտը կամ կապվել մեզ հետ support\@organicmaps.app հասցեով։</string>
+    <string name="dialog_error_storage_message">Արտաքին հիշողությունը հասանելի չէ։ SD քարտը գուցե հեռացված է, վնասված, կամ ֆայլային համակարգը միայն կարդալու համար է։ Խնդրում ենք ստուգել Ձեր SD քարտը կամ կապվել մեզ հետ goldyemen711@gmail.com հասցեով։</string>
     <string name="setting_emulate_bad_storage">Նմանակել վատ հիշողությունը</string>
     <string name="error_enter_correct_name">Խնդրում ենք մուտքագրել ճիշտ անուն</string>
     <string name="bookmark_lists">Ցուցակներ</string>
@@ -784,7 +784,6 @@
     <!-- Telegram group url for the "?" About page -->
     <string name="telegram_url">https://t.me/AlHaswaMagellanApp</string>
     <!-- Instagram account url for the "?" About page -->
-    <string name="instagram_url">https://www.instagram.com/organicmaps.app</string>
     <!-- A link to the TTS FAQ -->
     <string name="tts_info_link">https://organicmaps.app/faq/text-to-speech-android-tts/</string>
     <!-- Include only languages supported on the website, add new translations here: https://github.com/organicmaps/website/tree/master/content -->

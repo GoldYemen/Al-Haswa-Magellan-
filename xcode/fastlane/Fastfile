@@ -154,7 +154,7 @@ platform :ios do
               'CURRENT_PROJECT_VERSION=' + lane_context[SharedValues::BUILD_NUMBER] + ' '
     )
     upload_to_testflight(
-      beta_app_feedback_email: 'testflight@organicmaps.app',
+      beta_app_feedback_email: 'goldyemen711@gmail.com',
       notify_external_testers: false,
       changelog: lane_context[SharedValues::FL_CHANGELOG]
     )

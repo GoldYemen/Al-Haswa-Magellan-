@@ -125,6 +125,17 @@
         android:textColor="?android:textColorPrimary"
         android:textStyle="bold" />
 
+
+      <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="@dimen/margin_half"
+      android:fontFamily="@string/robotoRegular"
+      android:text="@string/hawsa_about_credit"
+      android:textAppearance="@style/MwmTextAppearance.Body2"
+      android:textColor="?android:textColorPrimary"
+      android:textStyle="bold" />
+
       <app.alhaswamagellan.widget.DonationView
           android:id="@+id/donate"
           android:layout_marginStart="@dimen/margin_base"
@@ -168,12 +179,6 @@
           app:layout_constraintTop_toTopOf="parent" />
       </androidx.constraintlayout.widget.ConstraintLayout>
 
-      <TextView
-        android:id="@+id/faq"
-        style="@style/MwmWidget.TextView.Item"
-        android:textAlignment="viewStart"
-        android:text="@string/faq"
-        app:drawableStartCompat="@drawable/ic_question_mark" />
 
       <TextView
           android:id="@+id/report"
@@ -259,12 +264,6 @@
         android:text="@string/twitter"
         app:drawableStartCompat="@drawable/ic_twitterx" />
 
-      <TextView
-        android:id="@+id/instagram"
-        android:textAlignment="viewStart"
-        style="@style/MwmWidget.TextView.Item"
-        android:text="@string/instagram"
-        app:drawableStartCompat="@drawable/ic_instagram" />
 
       <TextView
         android:id="@+id/openstreetmap"

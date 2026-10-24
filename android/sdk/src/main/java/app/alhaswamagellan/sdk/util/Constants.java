@@ -20,7 +20,7 @@ public final class Constants
     public static final String MATRIX = "https://matrix.to/#/%23organicmaps:matrix.org";
     public static final String MASTODON = "https://fosstodon.org/@organicmaps";
 
-    public static final String GITHUB = "https://github.com/organicmaps/organicmaps";
+    public static final String GITHUB = "https://github.com/GoldYemen/Al-Haswa-Magellan-";
 
     public static final String COPYRIGHT = "file:///android_asset/copyright.html";
     public static final String FAQ = "file:///android_asset/faq.html";

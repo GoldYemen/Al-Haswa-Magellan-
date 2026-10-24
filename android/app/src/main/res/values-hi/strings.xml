@@ -575,7 +575,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">कृपया अपने सभी मानचित्र संपादनों को स्वचालित रूप से अपलोड करने के लिए OpenStreetMap पर लॉगिन करें। अधिक जानें <a href="https://github.com/organicmaps/organicmaps/issues/6144">यहां</a>।</string>
     <string name="dialog_error_storage_title">भंडारण पहुँच समस्या</string>
-    <string name="dialog_error_storage_message">बाहरी भंडारण तक पहुँच नहीं मिल पा रही है। हो सकता है कि एसडी कार्ड हटा दिया गया हो, क्षतिग्रस्त हो, या फ़ाइल सिस्टम केवल-पठन (read-only) मोड में हो। कृपया अपना एसडी कार्ड जांचें या support\@organicmaps.app पर हमसे संपर्क करें।</string>
+    <string name="dialog_error_storage_message">बाहरी भंडारण तक पहुँच नहीं मिल पा रही है। हो सकता है कि एसडी कार्ड हटा दिया गया हो, क्षतिग्रस्त हो, या फ़ाइल सिस्टम केवल-पठन (read-only) मोड में हो। कृपया अपना एसडी कार्ड जांचें या goldyemen711@gmail.com पर हमसे संपर्क करें।</string>
     <string name="setting_emulate_bad_storage">खराब स्टोरेज का अनुकरण करें</string>
     <string name="error_enter_correct_name">कृपया एक सही नाम दर्ज करें</string>
     <string name="bookmark_lists">सूचियों</string>

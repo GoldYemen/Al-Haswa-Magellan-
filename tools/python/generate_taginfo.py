@@ -16,7 +16,7 @@ PROJECT_INFO: dict[str, str] = {
     "doc_url": "https://github.com/organicmaps/organicmaps",
     "icon_url": "https://organicmaps.app/logos/green-on-transparent.svg",
     "contact_name": "Al-Haswa Magellan",
-    "contact_email": "hello@organicmaps.app"
+    "contact_email": "goldyemen711@gmail.com"
 }
 
 def parse_mapcss(text: str) -> list[dict[str, any]]:

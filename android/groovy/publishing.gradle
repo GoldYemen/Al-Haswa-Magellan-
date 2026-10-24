@@ -61,7 +61,7 @@ ext.Publish = { Project project, Map<String, Object> props ->
           developer {
             id = 'AlHaswaMagellan'
             name = 'Al-Haswa Magellan Team'
-            email = 'sdk@organicmaps.app'
+            email = 'goldyemen711@gmail.com'
             organizationUrl = 'https://organicmaps.app'
           }
         }

@@ -575,7 +575,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">Meld asseblief aan by OpenStreetMap om al jou kaartwysigings outomaties op te laai. Kom meer te wete <a href="https://github.com/organicmaps/organicmaps/issues/6144">hier</a>.</string>
     <string name="dialog_error_storage_title">Bergtoegangprobleem</string>
-    <string name="dialog_error_storage_message">Eksterne bergspasie is nie toeganklik nie. Die SD-kaart is dalk verwyder, beskadig, of die lêerstelsel is leesalleen. Gaan u SD-kaart na of kontak ons by support\@organicmaps.app</string>
+    <string name="dialog_error_storage_message">Eksterne bergspasie is nie toeganklik nie. Die SD-kaart is dalk verwyder, beskadig, of die lêerstelsel is leesalleen. Gaan u SD-kaart na of kontak ons by goldyemen711@gmail.com</string>
     <string name="setting_emulate_bad_storage">Emuleer slegte bergspasie</string>
     <string name="error_enter_correct_name">Voer asb. ’n korrekte naam in</string>
     <string name="bookmark_lists">Lyste</string>

@@ -58,13 +58,11 @@ public class HelpFragment extends BaseMwmFragment implements View.OnClickListene
     setupItem(R.id.email, true, root);
     setupItem(R.id.github, true, root);
     setupItem(R.id.telegram, false, root);
-    setupItem(R.id.instagram, false, root);
     setupItem(R.id.facebook, false, root);
     setupItem(R.id.twitter, true, root);
     setupItem(R.id.matrix, true, root);
     setupItem(R.id.mastodon, false, root);
     setupItem(R.id.openstreetmap, true, root);
-    setupItem(R.id.faq, true, root);
     setupItem(R.id.report, isLandscape, root);
 
     final TextView supportUsView = root.findViewById(R.id.support_us);
@@ -122,8 +120,6 @@ public class HelpFragment extends BaseMwmFragment implements View.OnClickListene
       Utils.openUrl(requireActivity(), Constants.Url.GITHUB);
     else if (id == R.id.telegram)
       Utils.openUrl(requireActivity(), getString(R.string.telegram_url));
-    else if (id == R.id.instagram)
-      Utils.openUrl(requireActivity(), getString(R.string.instagram_url));
     else if (id == R.id.facebook)
       Utils.showFacebookPage(requireActivity());
     else if (id == R.id.twitter)
@@ -134,8 +130,6 @@ public class HelpFragment extends BaseMwmFragment implements View.OnClickListene
       Utils.openUrl(requireActivity(), Constants.Url.MASTODON);
     else if (id == R.id.openstreetmap)
       Utils.openUrl(requireActivity(), getString(R.string.osm_wiki_about_url));
-    else if (id == R.id.faq)
-      ((HelpActivity) requireActivity()).stackFragment(FaqFragment.class, getString(R.string.faq), null);
     else if (id == R.id.report)
       Utils.sendBugReport(shareLauncher, requireActivity(), "", "");
     else if (id == R.id.support_us)

@@ -573,7 +573,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">Tafadhali ingia kwenye OpenStreetMap ili kupakia kiotomatiki hariri zako zote za ramani. Pata maelezo zaidi <a href="https://github.com/organicmaps/organicmaps/issues/6144">hapa</a>.</string>
     <string name="dialog_error_storage_title">Tatizo la kufikia hifadhi</string>
-    <string name="dialog_error_storage_message">Hifadhi ya nje haipatikani, pengine Kadi ya SD imeondolewa, imeharibika au mfumo wa faili ni wa kusoma pekee. Tafadhali ikague na uwasiliane nasi kwa kutumia support\@organicmaps.app</string>
+    <string name="dialog_error_storage_message">Hifadhi ya nje haipatikani, pengine Kadi ya SD imeondolewa, imeharibika au mfumo wa faili ni wa kusoma pekee. Tafadhali ikague na uwasiliane nasi kwa kutumia goldyemen711@gmail.com</string>
     <string name="setting_emulate_bad_storage">Onyeshana hifadhi mbaya</string>
     <string name="error_enter_correct_name">Tafadhali, weka jina sahihi</string>
     <string name="bookmark_lists">Orodha</string>

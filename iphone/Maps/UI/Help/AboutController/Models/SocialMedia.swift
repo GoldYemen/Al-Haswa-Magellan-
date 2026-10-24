@@ -1,7 +1,6 @@
 enum SocialMedia: CaseIterable {
   case telegram
   case twitter
-  case instagram
   case facebook
   case reddit
   case matrix
@@ -18,7 +17,7 @@ enum SocialMedia: CaseIterable {
     case .telegram:
       return L("telegram_url")
     case .github:
-      return "https://github.com/organicmaps/organicmaps/"
+      return "https://github.com/GoldYemen/Al-Haswa-Magellan-"
     case .linkedin:
       return "https://www.linkedin.com/company/organic-maps/"
     case .organicMapsEmail:
@@ -31,14 +30,12 @@ enum SocialMedia: CaseIterable {
       return "https://facebook.com/AlHaswaMagellan"
     case .twitter:
       return "https://twitter.com/AlHaswaMagellanApp"
-    case .instagram:
-      return L("instagram_url")
     case .reddit:
       return "https://www.reddit.com/r/organicmaps/"
     case .tiktok:
       return "https://www.tiktok.com/@organicmaps"
     case .threads:
-      return "https://www.threads.com/@organicmaps.app"
+      return "https://www.threads.com/@AlHaswaMagellan"
     case .bluesky:
       return "https://bsky.app/profile/organicmaps.bsky.social"
     }
@@ -62,8 +59,6 @@ enum SocialMedia: CaseIterable {
       return UIImage(named: "ic_social_media_facebook")!
     case .twitter:
       return UIImage(named: "ic_social_media_x")!
-    case .instagram:
-      return UIImage(named: "ic_social_media_instagram")!
     case .reddit:
       return UIImage(named: "ic_social_media_reddit")!
     case .tiktok:

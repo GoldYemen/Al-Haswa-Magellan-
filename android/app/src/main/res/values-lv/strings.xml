@@ -575,7 +575,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">Ierakstieties „OpenStreetMap“, lai automātiski augšupielādētu visus kartes rediģējumus. Uzziniet vairāk <a href="https://github.com/organicmaps/organicmaps/issues/6144">te</a>.</string>
     <string name="dialog_error_storage_title">Krātuves pieejas problēma</string>
-    <string name="dialog_error_storage_message">Ārējā krātuve nav pieejama. Iespējams, ir izņemta vai bojāta SD karte, vai arī datņu sistēma ir tikai lasāma. Pārbaudiet savu SD karti vai sazinieties ar mums, rakstot uz support\@organicmaps.app</string>
+    <string name="dialog_error_storage_message">Ārējā krātuve nav pieejama. Iespējams, ir izņemta vai bojāta SD karte, vai arī datņu sistēma ir tikai lasāma. Pārbaudiet savu SD karti vai sazinieties ar mums, rakstot uz goldyemen711@gmail.com</string>
     <string name="setting_emulate_bad_storage">Simulēt bojātu krātuvi</string>
     <string name="error_enter_correct_name">Ierakstiet pareizu nosaukumu</string>
     <string name="bookmark_lists">Saraksti</string>
@@ -781,7 +781,6 @@
     <!-- Telegram group url for the "?" About page -->
     <string name="telegram_url">https://t.me/AlHaswaMagellanApp</string>
     <!-- Instagram account url for the "?" About page -->
-    <string name="instagram_url">https://www.instagram.com/organicmaps.app</string>
     <!-- Link to OSM wiki for Editor, Profile and About pages -->
     <string name="osm_wiki_about_url">https://wiki.openstreetmap.org/wiki/About_OpenStreetMap</string>
     <!-- A number of bookmarks and a number of tracks, separated by comma, like: 1 bookmark, 5 tracks -->

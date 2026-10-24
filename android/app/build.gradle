@@ -74,7 +74,7 @@ android {
     println('Version: ' + versionName)
     println('VersionCode: ' + versionCode)
     applicationId rootProject.ext.appId
-    buildConfigField 'String', 'SUPPORT_MAIL', '"android@organicmaps.app"'
+    buildConfigField 'String', 'SUPPORT_MAIL', '"goldyemen711@gmail.com"'
     // Should be customized in flavors.
     buildConfigField 'String', 'REVIEW_URL', '""'
     resourceConfigurations += [project.ext.supportedLocalizations]
@@ -93,7 +93,7 @@ android {
     google {
       dimension 'default'
       versionName = android.defaultConfig.versionName + '-Google'
-      buildConfigField 'String', 'SUPPORT_MAIL', '"googleplay@organicmaps.app"'
+      buildConfigField 'String', 'SUPPORT_MAIL', '"goldyemen711@gmail.com"'
       buildConfigField 'String', 'REVIEW_URL', '"market://details?id=app.alhaswamagellan"'
     }
 
@@ -101,20 +101,20 @@ android {
       dimension 'default'
       applicationIdSuffix '.web'
       versionName = android.defaultConfig.versionName + '-Web'
-      buildConfigField 'String', 'SUPPORT_MAIL', '"apk@organicmaps.app"'
+      buildConfigField 'String', 'SUPPORT_MAIL', '"goldyemen711@gmail.com"'
     }
 
     fdroid {
       dimension 'default'
       versionName = android.defaultConfig.versionName + '-FDroid'
-      buildConfigField 'String', 'SUPPORT_MAIL', '"fdroid@organicmaps.app"'
+      buildConfigField 'String', 'SUPPORT_MAIL', '"goldyemen711@gmail.com"'
     }
 
     huawei {
       dimension 'default'
       versionName = android.defaultConfig.versionName + '-Huawei'
       versionCode = HUAWEI_VERSION_CODE_BASE + android.defaultConfig.versionCode
-      buildConfigField 'String', 'SUPPORT_MAIL', '"huawei@organicmaps.app"'
+      buildConfigField 'String', 'SUPPORT_MAIL', '"goldyemen711@gmail.com"'
       buildConfigField 'String', 'REVIEW_URL', '"appmarket://details?id=app.alhaswamagellan"'
     }
   }

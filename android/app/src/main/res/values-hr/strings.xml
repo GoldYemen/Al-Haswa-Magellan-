@@ -573,7 +573,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">Molimo prijavite se na OpenStreetMap kako biste automatski učitali sve svoje izmjene karte. Saznajte više <a href="https://github.com/organicmaps/organicmaps/issues/6144">ovdje</a>.</string>
     <string name="dialog_error_storage_title">Problem s pristupom pohrani</string>
-    <string name="dialog_error_storage_message">Vanjska pohrana nije dostupna. SD kartica je možda uklonjena, oštećena ili je datotečni sustav samo za čitanje. Molimo provjerite svoju SD karticu ili nas kontaktirajte na support\@organicmaps.app</string>
+    <string name="dialog_error_storage_message">Vanjska pohrana nije dostupna. SD kartica je možda uklonjena, oštećena ili je datotečni sustav samo za čitanje. Molimo provjerite svoju SD karticu ili nas kontaktirajte na goldyemen711@gmail.com</string>
     <string name="setting_emulate_bad_storage">Emuliraj loše pohranjivanje</string>
     <string name="error_enter_correct_name">Molimo unesite ispravno ime</string>
     <string name="bookmark_lists">Popisi</string>
@@ -782,7 +782,6 @@
     <!-- Telegram group url for the "?" About page -->
     <string name="telegram_url">https://t.me/AlHaswaMagellanApp</string>
     <!-- Instagram account url for the "?" About page -->
-    <string name="instagram_url">https://www.instagram.com/organicmaps.app</string>
     <!-- A link to the TTS FAQ -->
     <string name="tts_info_link">https://organicmaps.app/faq/text-to-speech-android-tts/</string>
     <!-- Link to OSM wiki for Editor, Profile and About pages -->

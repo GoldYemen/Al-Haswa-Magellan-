@@ -575,7 +575,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">Prijavite se v OpenStreetMap, da samodejno naložite vsa svoja urejanja zemljevida. Več o tem <a href="https://github.com/organicmaps/organicmaps/issues/6144">tukaj</a>.</string>
     <string name="dialog_error_storage_title">Težava z dostopom do shrambe</string>
-    <string name="dialog_error_storage_message">Zunanja shramba ni dostopna. Kartica SD je morda bila odstranjena, poškodovana ali pa je datotečni sistem samo za branje. Preverite svojo kartico SD ali nas kontaktirajte na support\@organicmaps.app</string>
+    <string name="dialog_error_storage_message">Zunanja shramba ni dostopna. Kartica SD je morda bila odstranjena, poškodovana ali pa je datotečni sistem samo za branje. Preverite svojo kartico SD ali nas kontaktirajte na goldyemen711@gmail.com</string>
     <string name="setting_emulate_bad_storage">Emuliraj slabo shrambo</string>
     <string name="error_enter_correct_name">Vnesite pravilno ime</string>
     <string name="bookmark_lists">Seznami</string>
@@ -790,7 +790,6 @@
     <!-- Telegram group url for the "?" About page -->
     <string name="telegram_url">https://t.me/AlHaswaMagellanApp</string>
     <!-- Instagram account url for the "?" About page -->
-    <string name="instagram_url">https://www.instagram.com/organicmaps.app</string>
     <!-- A link to the TTS FAQ -->
     <string name="tts_info_link">https://organicmaps.app/faq/text-to-speech-android-tts/</string>
     <!-- Link to OSM wiki for Editor, Profile and About pages -->

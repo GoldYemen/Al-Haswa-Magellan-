@@ -575,7 +575,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">لطفاً به OpenStreetMap وارد شوید تا به طور خودکار تمام ویرایش های نقشه خود را آپلود کنید. <a href="https://github.com/organicmaps/organicmaps/issues/6144">اینجا</a> بیشتر بیاموزید.</string>
     <string name="dialog_error_storage_title">مشکل دسترسی به ذخیره‌سازی</string>
-    <string name="dialog_error_storage_message">حافظه خارجی قابل دسترسی نیست. ممکن است کارت SD برداشته شده، آسیب دیده باشد، یا سیستم پرونده فقط خواندنی باشد. لطفا کارت SD خود را بررسی کنید یا با ما در support\@organicmaps.app تماس بگیرید</string>
+    <string name="dialog_error_storage_message">حافظه خارجی قابل دسترسی نیست. ممکن است کارت SD برداشته شده، آسیب دیده باشد، یا سیستم پرونده فقط خواندنی باشد. لطفا کارت SD خود را بررسی کنید یا با ما در goldyemen711@gmail.com تماس بگیرید</string>
     <string name="setting_emulate_bad_storage">شبیه سازی ذخیره سازی بد</string>
     <string name="error_enter_correct_name">لطفا نام صحیح را وارد کنید</string>
     <string name="bookmark_lists">فهرست‌ها</string>
@@ -784,7 +784,6 @@
     <!-- Telegram group url for the "?" About page -->
     <string name="telegram_url">https://t.me/AlHaswaMagellanApp</string>
     <!-- Instagram account url for the "?" About page -->
-    <string name="instagram_url">https://www.instagram.com/organicmaps.app</string>
     <!-- A link to the TTS FAQ -->
     <string name="tts_info_link">https://organicmaps.app/fa-IR/faq/voice/text-to-speech-android-tts/</string>
     <!-- Include only languages supported on the website, add new translations here: https://github.com/organicmaps/website/tree/master/content -->

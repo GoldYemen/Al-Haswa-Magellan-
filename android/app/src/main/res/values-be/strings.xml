@@ -575,7 +575,7 @@
     <!-- Alert to ask user relogin to OpenStreetMap with OAuth2 flow after OAuth1 authentication is deprecated. -->
     <string name="alert_reauth_message">Увайдзіце ў OpenStreetMap, каб аўтаматычна запампоўваць усе свае праўкі мапы. Даведайцеся больш <a href="https://github.com/organicmaps/organicmaps/issues/6144">тут</a>.</string>
     <string name="dialog_error_storage_title">Праблема з доступам да сховішча</string>
-    <string name="dialog_error_storage_message">Знешняе сховішча недаступна. Магчыма, SD-карта была вынята або пашкоджана ці файлавая сістэма даступна толькі для чытання. Праверце SD-карту або зважыцеся з намі праз support\@organicmaps.app</string>
+    <string name="dialog_error_storage_message">Знешняе сховішча недаступна. Магчыма, SD-карта была вынята або пашкоджана ці файлавая сістэма даступна толькі для чытання. Праверце SD-карту або зважыцеся з намі праз goldyemen711@gmail.com</string>
     <string name="setting_emulate_bad_storage">Эмуляваць дрэннае сховішча</string>
     <string name="error_enter_correct_name">Увядзіце правільную назву</string>
     <string name="bookmark_lists">Спісы</string>
@@ -793,7 +793,6 @@
     <!-- Telegram group url for the "?" About page -->
     <string name="telegram_url">https://t.me/AlHaswaMagellanRu</string>
     <!-- Instagram account url for the "?" About page -->
-    <string name="instagram_url">https://www.instagram.com/organicmaps.app</string>
     <!-- A link to the TTS FAQ -->
     <string name="tts_info_link">https://organicmaps.app/faq/text-to-speech-android-tts/</string>
     <!-- Include only languages supported on the website, add new translations here: https://github.com/organicmaps/website/tree/master/content -->
