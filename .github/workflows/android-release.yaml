@@ -109,6 +109,10 @@ jobs:
     name: Android Release
     runs-on: ubuntu-latest
     environment: production
+    env:
+      # Secrets cannot be referenced inside an `if:` expression directly, so they
+      # are exposed as job-level variables and the conditions below read those.
+      SCREENSHOTS_REPO: ${{ secrets.SCREENSHOTS_REPO }}
     permissions:
       contents: write
       discussions: write
@@ -143,6 +147,9 @@ jobs:
         run: git submodule update --depth 1 --init --recursive --jobs=$(($(nproc) * 20))
 
       - name: Checkout screenshots
+        # Optional: skipped when no screenshots repository is configured. The
+        # release build must not fail just because this extra repo is absent.
+        if: ${{ env.SCREENSHOTS_REPO != '' }}
         uses: actions/checkout@v6
         with:
           repository: ${{ secrets.SCREENSHOTS_REPO }}
@@ -153,12 +160,121 @@ jobs:
       - name: Restore release keys
         shell: bash
         run: |
-          echo "$PRIVATE_H" | base64 -d > private.h
-          echo "$GOOGLE_PLAY_JSON" | base64 -d > android/app/google-play.json
-          echo "$HUAWEI_APPGALLERY_JSON" | base64 -d > android/app/huawei-appgallery.json
-          echo "$AGCONNECT_SERVICES_JSON" | base64 -d > android/app/agconnect-services.json
-          echo "$SECURE_PROPERTIES" | base64 -d > android/app/secure.properties
-          echo "$RELEASE_KEYSTORE" | base64 -d > android/app/release.keystore
+          # A secret that is not configured expands to an empty string, and
+          # `echo "" | base64 -d > file` silently truncates the file to 0 bytes.
+          # private.h must never end up empty: it is part of the native build
+          # (libs/platform/CMakeLists.txt, android/sdk/.../CMakeLists.txt) and is
+          # #included by platform.cpp, osm_auth.cpp, traffic_info.cpp and more,
+          # so an empty file fails to compile with "'METASERVER_URL' was not
+          # declared in this scope" and friends.
+          #
+          # Rule for every file below: decode to a temporary file first, keep the
+          # file that is already in the repository when the secret is missing or
+          # does not decode, and only move the temporary file into place when it
+          # is valid.
+          rm -f private.h.candidate
+
+          # ── PRIVATE_H ──
+          if [[ -n "$PRIVATE_H" ]]; then
+            if echo "$PRIVATE_H" | base64 -d > private.h.candidate 2>/dev/null; then
+              if grep -q '^#define METASERVER_URL ' private.h.candidate && \
+                 grep -q '^#define DEFAULT_URLS_JSON ' private.h.candidate; then
+                mv private.h.candidate private.h
+                echo "Restored private.h from the PRIVATE_H secret."
+              else
+                echo "PRIVATE_H is missing the required defines; keeping the checked-in private.h."
+                rm -f private.h.candidate
+              fi
+            else
+              echo "PRIVATE_H is not valid base64; keeping the checked-in private.h."
+              rm -f private.h.candidate 2>/dev/null || true
+            fi
+          else
+            echo "PRIVATE_H not set; keeping the checked-in private.h."
+          fi
+
+          # Hard stop instead of letting the native build fail 4 minutes later.
+          if [[ ! -s private.h ]]; then
+            echo "::error::private.h is empty, the native build cannot continue."
+            exit 1
+          fi
+          echo "private.h is $(wc -c < private.h) bytes."
+
+          # ── GOOGLE_PLAY_JSON ──
+          if [[ -n "$GOOGLE_PLAY_JSON" ]]; then
+            echo "$GOOGLE_PLAY_JSON" | base64 -d > android/app/google-play.json.tmp 2>/dev/null
+            if [[ -s android/app/google-play.json.tmp ]]; then
+              mv android/app/google-play.json.tmp android/app/google-play.json
+              echo "HAS_GOOGLE_PLAY=true" >> "$GITHUB_ENV"
+            else
+              echo "GOOGLE_PLAY_JSON decoded to an empty file; Play publishing stays disabled."
+              rm -f android/app/google-play.json.tmp
+              echo "HAS_GOOGLE_PLAY=false" >> "$GITHUB_ENV"
+            fi
+          else
+            echo "GOOGLE_PLAY_JSON not set; Play publishing stays disabled."
+            echo "HAS_GOOGLE_PLAY=false" >> "$GITHUB_ENV"
+          fi
+
+          # ── HUAWEI_APPGALLERY_JSON / AGCONNECT_SERVICES_JSON ──
+          if [[ -n "$HUAWEI_APPGALLERY_JSON" ]]; then
+            echo "$HUAWEI_APPGALLERY_JSON" | base64 -d > android/app/huawei-appgallery.json.tmp 2>/dev/null
+            if [[ -s android/app/huawei-appgallery.json.tmp ]]; then
+              mv android/app/huawei-appgallery.json.tmp android/app/huawei-appgallery.json
+              echo "HAS_HUAWEI_APPGALLERY=true" >> "$GITHUB_ENV"
+            else
+              echo "HUAWEI_APPGALLERY_JSON decoded to an empty file; AppGallery publishing stays disabled."
+              rm -f android/app/huawei-appgallery.json.tmp
+              echo "HAS_HUAWEI_APPGALLERY=false" >> "$GITHUB_ENV"
+            fi
+          else
+            echo "HUAWEI_APPGALLERY_JSON not set; AppGallery publishing stays disabled."
+            echo "HAS_HUAWEI_APPGALLERY=false" >> "$GITHUB_ENV"
+          fi
+
+          if [[ -n "$AGCONNECT_SERVICES_JSON" ]]; then
+            echo "$AGCONNECT_SERVICES_JSON" | base64 -d > android/app/agconnect-services.json.tmp 2>/dev/null
+            if [[ -s android/app/agconnect-services.json.tmp ]]; then
+              mv android/app/agconnect-services.json.tmp android/app/agconnect-services.json
+              echo "Restored agconnect-services.json from the secret."
+            else
+              echo "AGCONNECT_SERVICES_JSON decoded to an empty file; keeping the build without it."
+              rm -f android/app/agconnect-services.json.tmp
+            fi
+          else
+            echo "AGCONNECT_SERVICES_JSON not set; keeping the build without it."
+          fi
+
+          # ── SECURE_PROPERTIES ──
+          # Without it groovy/application-signing.gradle falls back to debug
+          # signing, which is a supported configuration.
+          if [[ -n "$SECURE_PROPERTIES" ]]; then
+            echo "$SECURE_PROPERTIES" | base64 -d > android/app/secure.properties.tmp 2>/dev/null
+            if [[ -s android/app/secure.properties.tmp ]]; then
+              mv android/app/secure.properties.tmp android/app/secure.properties
+              echo "Restored secure.properties from the secret."
+            else
+              echo "SECURE_PROPERTIES decoded to an empty file; the release will be debug-signed."
+              rm -f android/app/secure.properties.tmp
+            fi
+          else
+            echo "SECURE_PROPERTIES not set; the release will be debug-signed."
+          fi
+
+          # ── RELEASE_KEYSTORE ──
+          # Only moved into place when secure.properties actually points at it.
+          if [[ -n "$RELEASE_KEYSTORE" ]]; then
+            echo "$RELEASE_KEYSTORE" | base64 -d > android/app/release.keystore.tmp 2>/dev/null
+            if [[ -s android/app/release.keystore.tmp ]]; then
+              mv android/app/release.keystore.tmp android/app/release.keystore
+              echo "Restored release.keystore from the secret."
+            else
+              echo "RELEASE_KEYSTORE decoded to an empty file; using the debug keystore."
+              rm -f android/app/release.keystore.tmp
+            fi
+          else
+            echo "RELEASE_KEYSTORE not set; using the debug keystore."
+          fi
         env:
           PRIVATE_H: ${{ secrets.PRIVATE_H }}
           GOOGLE_PLAY_JSON: ${{ secrets.GOOGLE_PLAY_JSON }}
@@ -211,17 +327,28 @@ jobs:
           name: AlHaswaMagellan-${{ needs.tag.outputs.code }}-huawei-release.aab
           path: ./android/app/build/outputs/bundle/huaweiRelease/AlHaswaMagellan-${{ needs.tag.outputs.code }}-huawei-release.aab
 
-      - name: Upload to Google Play
-        if: ${{ matrix.flavor == 'google' }}
-        shell: bash
-        working-directory: android
-        run: ./gradlew publishGoogleReleaseBundle
-
-      - name: Upload to Huawei AppGallery
-        if: ${{ matrix.flavor == 'huawei' }}
-        shell: bash
-        working-directory: android
-        run: ./gradlew publishHuaweiAppGalleryHuaweiRelease
+      # Store publishing is disabled on purpose: the Google Play publisher
+      # (com.github.triplet.play) and the Huawei AppGallery publisher
+      # (ru.cian.huawei-publish-gradle-plugin) are not applied in
+      # android/app/build.gradle, so `publishGoogleReleaseBundle` and
+      # `publishHuaweiAppGalleryHuaweiRelease` do not exist and would fail the
+      # build. The signed .aab files are still uploaded as workflow artifacts
+      # above and can be uploaded to the stores by hand.
+      #
+      # Re-enable these two steps once the publisher plugins are added back and
+      # the matching store credentials are configured as secrets.
+      #
+      #- name: Upload to Google Play
+      #  if: ${{ matrix.flavor == 'google' && env.HAS_GOOGLE_PLAY == 'true' }}
+      #  shell: bash
+      #  working-directory: android
+      #  run: ./gradlew publishGoogleReleaseBundle
+      #
+      #- name: Upload to Huawei AppGallery
+      #  if: ${{ matrix.flavor == 'huawei' && env.HAS_HUAWEI_APPGALLERY == 'true' }}
+      #  shell: bash
+      #  working-directory: android
+      #  run: ./gradlew publishHuaweiAppGalleryHuaweiRelease
 
       - name: sha256sum web release apk
         if: ${{ matrix.flavor == 'web' }}
