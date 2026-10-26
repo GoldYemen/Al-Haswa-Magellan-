@@ -19,7 +19,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # Version is read from android/gradle/libs.versions.toml (single source of truth).
       - name: Install ktlint

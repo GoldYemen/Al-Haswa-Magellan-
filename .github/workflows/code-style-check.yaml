@@ -24,7 +24,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # The versioned binary is enough: clang-format.sh resolves clang-format-$CLANG_FORMAT_VERSION
       # by name and verifies its version, so the unversioned one in the image is never used.

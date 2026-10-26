@@ -13,7 +13,7 @@ jobs:
     name: Check preconditions
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1000 # fetch month or so
 
@@ -48,7 +48,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v3
 
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 100 # enough to get all commits for the current day
 
