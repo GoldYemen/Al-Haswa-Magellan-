@@ -1,4 +1,17 @@
 User-agent: *
 Allow: /
 
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+Host: https://al-haswa-magellan-website.vercel.app
 Sitemap: https://al-haswa-magellan-website.vercel.app/sitemap.xml
