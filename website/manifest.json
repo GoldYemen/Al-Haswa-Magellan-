@@ -1,0 +1,15 @@
+{
+  "name": "الحسوة ماجلان | AlHaswa Magellan",
+  "short_name": "الحسوة ماجلان",
+  "description": "تطبيق عربي للملاحة واستكشاف البر والبحر.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#07111f",
+  "theme_color": "#0A1628",
+  "icons": [
+    { "src": "/1792433047845.jpg", "sizes": "1024x1024", "type": "image/jpeg", "purpose": "any" }
+  ]
+}
