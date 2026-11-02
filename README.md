@@ -4,6 +4,14 @@
   <p>دليلك للملاحة واستكشاف البر والبحر</p>
   <img width="1024" height="1024" alt="1792433047845" src="https://github.com/user-attachments/assets/86278bd4-6b5e-4bd7-9ed5-c279c48e8e86" />
 
+ 🌐 الموقع الرسمي | Official Website
+  • 
+  
+
+
+
+الموقع الرسمي للمشروع: https://al-haswa-magellan-website.vercel.app/
+
 
 </div>---
 
