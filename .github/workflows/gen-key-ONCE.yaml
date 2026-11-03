@@ -1,0 +1,104 @@
+# ============================================================
+#  Generate signing key (ONE TIME ONLY)
+# ============================================================
+#  Run this ONCE in your life to create the app signing key.
+#  It builds a keystore with a strong random password and gives
+#  you two base64 text files to paste into GitHub secrets.
+#
+#  HOW TO RUN:
+#     GitHub -> Actions -> "Generate signing key (ONE TIME)"
+#            -> Run workflow -> Run workflow
+#
+#  THEN DOWNLOAD the two Artifacts files at the bottom of the run page.
+#
+#  IMPORTANT:
+#     After you have downloaded them and added the secrets,
+#     DELETE this workflow file, so nobody regenerates a key by accident.
+#
+#  Produces:
+#     RELEASE_KEYSTORE  <- content of keystore.b64
+#     SECURE_PROPERTIES <- content of secure.properties.b64
+# ============================================================
+
+name: Generate signing key (ONE TIME)
+
+on:
+  workflow_dispatch:
+    inputs:
+      alias:
+        description: 'Key alias (the name of the key inside the keystore)'
+        required: true
+        default: 'alhaswa'
+      validity_years:
+        description: 'How many years the key stays valid'
+        required: true
+        default: '27'
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate the keystore with a strong random password
+        shell: bash
+        env:
+          ALIAS: ${{ github.event.inputs.alias }}
+          YEARS: ${{ github.event.inputs.validity_years }}
+        run: |
+          set -euo pipefail
+
+          # A strong random password, created here and shown nowhere else.
+          PW="$(head -c 48 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 24)"
+          DAYS=$(( YEARS * 365 ))
+
+          keytool -genkeypair -v \
+            -keystore release.keystore \
+            -alias "$ALIAS" \
+            -keyalg RSA -keysize 2048 \
+            -validity "$DAYS" \
+            -storepass "$PW" \
+            -keypass "$PW" \
+            -dname "CN=Al-Haswa Magellan, OU=Mobile, O=GoldYemen, L=Sanaa, ST=Sanaa, C=YE"
+
+          # These two files are what you keep forever.
+          base64 -w0 release.keystore > keystore.b64
+
+          {
+            echo "storeFile=release.keystore"
+            echo "storePassword=$PW"
+            echo "keyAlias=$ALIAS"
+            echo "keyPassword=$PW"
+          } > secure.properties
+
+          base64 -w0 secure.properties > secure.properties.b64
+
+          # Show the fingerprint in the run summary so it can be verified later.
+          {
+            echo "### Key created"
+            echo ""
+            echo '```'
+            keytool -list -v -keystore release.keystore -storepass "$PW" \
+              | grep -E 'Alias name|Valid from|^[[:space:]]*SHA256' || true
+            echo '```'
+            echo ""
+            echo "**Next:** download the two artifacts below, then delete this workflow."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload keystore (paste into RELEASE_KEYSTORE)
+        uses: actions/upload-artifact@v4
+        with:
+          name: keystore-base64-DOWNLOAD-ME
+          path: keystore.b64
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload properties (paste into SECURE_PROPERTIES)
+        uses: actions/upload-artifact@v4
+        with:
+          name: secure-properties-base64-DOWNLOAD-ME
+          path: secure.properties.b64
+          if-no-files-found: error
+          retention-days: 1
