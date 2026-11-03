@@ -36,7 +36,7 @@ on:
       retention_days:
         description: 'Keep the APK available for N days'
         required: false
-        default: '30'
+        default: '7'
 
 permissions:
   contents: read
@@ -49,6 +49,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 240
+
+    env:
+      # The Android SDK is already installed on GitHub's runners.
+      # We only point Gradle at it; we do NOT install it again.
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      ANDROID_HOME: /usr/local/lib/android/sdk
 
     steps:
       - name: Install build tools
@@ -76,12 +82,36 @@ jobs:
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Write local.properties
+      # ----------------------------------------------------------
+      #  Check the Android SDK that is already on the machine.
+      #  If its path differs, fall back to the one GitHub exposes.
+      #  (No third-party SDK installer is used: re-installing the
+      #   SDK on top of the preinstalled one is what made the
+      #   earlier run fail.)
+      # ----------------------------------------------------------
+      - name: Locate the preinstalled Android SDK
         shell: bash
-        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+        run: |
+          set -euo pipefail
+          SDK="$ANDROID_SDK_ROOT"
+          if [[ ! -d "$SDK" ]]; then
+            SDK="${ANDROID_HOME:-}"
+          fi
+          if [[ ! -d "$SDK" ]]; then
+            echo "::error::Could not find the Android SDK on this runner."
+            ls -la /usr/local/lib/android || true
+            exit 1
+          fi
+          echo "SDK found at: $SDK"
+          ls -1 "$SDK" | head -20
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+
+      - name: Write android/local.properties
+        shell: bash
+        run: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
+          cat android/local.properties
 
       # ----------------------------------------------------------
       #  Restore the private data file (only if the secret exists).
@@ -204,4 +234,4 @@ jobs:
           name: alhaswa-magellan-apk
           path: android/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
-          retention-days: ${{ fromJSON(github.event.inputs.retention_days || '30') }}
+          retention-days: ${{ fromJSON(github.event.inputs.retention_days || '7') }}
