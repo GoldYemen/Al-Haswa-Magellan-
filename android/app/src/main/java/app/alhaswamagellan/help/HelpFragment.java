@@ -49,24 +49,13 @@ public class HelpFragment extends BaseMwmFragment implements View.OnClickListene
     if (osmPresentationView != null)
       osmPresentationView.setText(getString(R.string.osm_presentation, dataVersion));
 
-    // Remove support, news, rating, and social links from the About menu.
-    root.findViewById(R.id.support_us).setVisibility(View.GONE);
-    root.findViewById(R.id.news).setVisibility(View.GONE);
-    root.findViewById(R.id.rate).setVisibility(View.GONE);
-    root.findViewById(R.id.telegram).setVisibility(View.GONE);
-    root.findViewById(R.id.matrix).setVisibility(View.GONE);
-    root.findViewById(R.id.mastodon).setVisibility(View.GONE);
-    root.findViewById(R.id.facebook).setVisibility(View.GONE);
-    root.findViewById(R.id.twitter).setVisibility(View.GONE);
-    root.findViewById(R.id.donate).setVisibility(View.GONE);
-
     setupItem(R.id.web, true, root);
     setupItem(R.id.email, true, root);
     setupItem(R.id.github, true, root);
     setupItem(R.id.openstreetmap, true, root);
     setupItem(R.id.report, isLandscape, root);
-
     setupItem(R.id.copyright, false, root);
+
     View termOfUseView = root.findViewById(R.id.term_of_use_link);
     View privacyPolicyView = root.findViewById(R.id.privacy_policy);
     termOfUseView.setOnClickListener(
