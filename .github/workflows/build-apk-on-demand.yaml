@@ -1,23 +1,21 @@
 # ============================================================
 #  Build Full APK (maps bundled) — ON DEMAND ONLY
 # ============================================================
-#  What this does:
-#    Builds a COMPLETE, installable APK that already contains the
-#    world maps + the pre-bundled Yemen map, so it works offline
-#    from the very first launch.
+#  Produces a COMPLETE, installable APK that already contains
+#  the world maps + the pre-bundled Yemen map (works offline
+#  from the first launch).
 #
-#  How it runs:
-#    NEVER on its own. It only runs when YOU click it:
-#      GitHub  ->  Actions  ->  "Build Full APK (maps bundled)"
-#              ->  Run workflow
+#  Runs ONLY when you click:
+#     GitHub -> Actions -> "Build Full APK (maps bundled)" -> Run workflow
+#  It never runs on its own and never attaches anything to a Release.
 #
-#  Where the APK goes:
-#    It is saved as a workflow artifact you download and then
-#    upload to Uptodown yourself.
-#    It is NOT attached to any GitHub Release.
+#  Signing:
+#     If the repository secrets RELEASE_KEYSTORE and SECURE_PROPERTIES
+#     are configured, the APK is release-signed.
+#     Otherwise it is debug-signed (installs fine, but store updates
+#     must later use the same key).
 #
-#  Install it at:
-#    .github/workflows/build-apk-on-demand.yaml
+#  Install at:  .github/workflows/build-apk-on-demand.yaml
 # ============================================================
 
 name: Build Full APK (maps bundled)
@@ -50,24 +48,30 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
-
-    # The Gradle wrapper lives in the android/ folder of this repo.
-    defaults:
-      run:
-        working-directory: android
+    timeout-minutes: 240
 
     steps:
+      - name: Install build tools
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build
+
       - name: Check out the repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up Java 17
+      # The native build needs the submodules; without this the build fails.
+      - name: Check out submodules
+        shell: bash
+        run: git submodule update --depth 1 --init --recursive --jobs=$(($(nproc) * 20))
+
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@v4
@@ -75,56 +79,129 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      # ----------------------------------------------------------
-      #  Optional: release signing.
-      #  If you already restore the keystore in your existing
-      #  release workflow, COPY THOSE STEPS HERE VERBATIM
-      #  (same secret names, same file paths) and delete the two
-      #  steps below.
-      #  Without it the APK is debug-signed: it installs fine, but
-      #  later store updates must use the exact same key.
-      # ----------------------------------------------------------
-      - name: Restore release keystore (if configured)
-        if: ${{ secrets.RELEASE_KEYSTORE != '' }}
-        working-directory: android
-        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > release.keystore
-
-      - name: Write signing properties (if configured)
-        if: ${{ secrets.SECURE_PROPERTIES != '' }}
-        working-directory: android
-        run: echo "${{ secrets.SECURE_PROPERTIES }}" > secure.properties
+      - name: Write local.properties
+        shell: bash
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > android/local.properties
 
       # ----------------------------------------------------------
-      #  Build the APK.
-      #  NOTE: 'assemble...' makes an installable APK.
-      #        'bundle...'  would make an AAB, which Uptodown does
-      #        NOT accept. We deliberately use 'assemble'.
+      #  Restore the private data file (only if the secret exists).
+      #  A checked-in private.h is used as fallback, so this is safe.
       # ----------------------------------------------------------
-      - name: Make Gradle wrapper executable
-        run: chmod +x ./gradlew
+      - name: Restore private.h (optional)
+        shell: bash
+        env:
+          PRIVATE_H: ${{ secrets.PRIVATE_H }}
+        run: |
+          if [[ -n "$PRIVATE_H" ]]; then
+            if echo "$PRIVATE_H" | base64 -d > private.h.candidate 2>/dev/null; then
+              if grep -q '^#define METASERVER_URL ' private.h.candidate && \
+                 grep -q '^#define DEFAULT_URLS_JSON ' private.h.candidate; then
+                mv private.h.candidate private.h
+                echo "Restored private.h from the PRIVATE_H secret."
+              else
+                rm -f private.h.candidate
+                echo "PRIVATE_H incomplete; keeping the checked-in private.h."
+              fi
+            else
+              rm -f private.h.candidate || true
+              echo "PRIVATE_H is not valid base64; keeping the checked-in private.h."
+            fi
+          else
+            echo "PRIVATE_H not set; keeping the checked-in private.h."
+          fi
+
+      # ----------------------------------------------------------
+      #  SIGNING — the important part.
+      #  Files go to android/app/ because the signing logic reads
+      #  app/secure.properties and resolves the keystore relative
+      #  to app/ as well.
+      #  Note: secrets cannot be used inside "if:" directly, so
+      #  they are passed through env and checked in the script.
+      # ----------------------------------------------------------
+      - name: Restore release signing (optional)
+        shell: bash
+        env:
+          SECURE_PROPERTIES: ${{ secrets.SECURE_PROPERTIES }}
+          RELEASE_KEYSTORE: ${{ secrets.RELEASE_KEYSTORE }}
+        run: |
+          mkdir -p android/app
+
+          if [[ -n "$SECURE_PROPERTIES" ]]; then
+            echo "$SECURE_PROPERTIES" | base64 -d > android/app/secure.properties.tmp 2>/dev/null || true
+            if [[ -s android/app/secure.properties.tmp ]]; then
+              mv android/app/secure.properties.tmp android/app/secure.properties
+              echo "Restored secure.properties from the SECURE_PROPERTIES secret."
+            else
+              rm -f android/app/secure.properties.tmp
+              echo "SECURE_PROPERTIES decoded empty; the APK will be debug-signed."
+            fi
+          else
+            echo "SECURE_PROPERTIES not set; the APK will be debug-signed."
+          fi
+
+          if [[ -n "$RELEASE_KEYSTORE" ]]; then
+            echo "$RELEASE_KEYSTORE" | base64 -d > android/app/release.keystore.tmp 2>/dev/null || true
+            if [[ -s android/app/release.keystore.tmp ]]; then
+              mv android/app/release.keystore.tmp android/app/release.keystore
+              echo "Restored release.keystore from the RELEASE_KEYSTORE secret."
+            else
+              rm -f android/app/release.keystore.tmp
+              echo "RELEASE_KEYSTORE decoded empty; falling back to the debug keystore."
+            fi
+          else
+            echo "RELEASE_KEYSTORE not set; falling back to the debug keystore."
+          fi
+
+          # Tell the user what actually happened.
+          if [[ -s android/app/secure.properties && -s android/app/release.keystore ]]; then
+            echo "SIGNING=release" >> "$GITHUB_ENV"
+          else
+            echo "SIGNING=debug" >> "$GITHUB_ENV"
+          fi
+
+      # ----------------------------------------------------------
+      #  Build. "assemble..." = installable APK for Uptodown.
+      #  ("bundle..." would make an AAB, which Uptodown rejects.)
+      # ----------------------------------------------------------
+      - name: Make gradlew executable
+        shell: bash
+        run: chmod +x android/gradlew
 
       - name: Build Google APK (maps bundled)
         if: ${{ contains(github.event.inputs.flavors, 'google') }}
+        shell: bash
+        working-directory: android
         run: ./gradlew assembleGoogleRelease --stacktrace
 
       - name: Build Huawei APK (maps bundled)
         if: ${{ contains(github.event.inputs.flavors, 'huawei') }}
+        shell: bash
+        working-directory: android
         run: ./gradlew assembleHuaweiRelease --stacktrace
 
       - name: Build Web APK
         if: ${{ github.event.inputs.flavors == 'web' }}
+        shell: bash
+        working-directory: android
         run: ./gradlew assembleWebRelease --stacktrace
 
-      - name: Show produced files
+      - name: Summary
+        shell: bash
         run: |
-          echo "### Produced APKs" >> $GITHUB_STEP_SUMMARY
-          find app/build/outputs/apk -name '*.apk' -type f \
-            -exec du -h {} \; >> $GITHUB_STEP_SUMMARY || true
+          {
+            echo "### Build finished"
+            echo ""
+            echo "Signing: **${SIGNING}**"
+            echo ""
+            echo "| APK | Size |"
+            echo "| --- | --- |"
+            find android/app/build/outputs/apk -name '*.apk' -type f -printf '| %f | ' -exec du -h {} \; | awk '{print $0}' || true
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload APK as download
+      - name: Upload APK as a downloadable artifact
         uses: actions/upload-artifact@v4
         with:
-          name: alhaswa-apk-${{ github.run_number }}
+          name: alhaswa-magellan-apk
           path: android/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
           retention-days: ${{ fromJSON(github.event.inputs.retention_days || '30') }}
