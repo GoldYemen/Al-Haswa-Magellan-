@@ -2,7 +2,6 @@ package app.alhaswamagellan.help;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,11 +21,9 @@ import app.alhaswamagellan.util.Graphics;
 import app.alhaswamagellan.util.SharingUtils;
 import app.alhaswamagellan.util.Utils;
 import app.alhaswamagellan.util.WindowInsetUtils.ScrollableContentInsetsListener;
-import app.alhaswamagellan.widget.DonationView;
 
 public class HelpFragment extends BaseMwmFragment implements View.OnClickListener
 {
-  private String mDonateUrl;
   private ActivityResultLauncher<SharingUtils.SharingIntent> shareLauncher;
 
   private TextView setupItem(@IdRes int id, boolean tint, @NonNull View frame)
@@ -41,7 +38,6 @@ public class HelpFragment extends BaseMwmFragment implements View.OnClickListene
   @Override
   public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState)
   {
-    mDonateUrl = Utils.getDonateUrl(requireContext());
     View root = inflater.inflate(R.layout.about, container, false);
 
     ((TextView) root.findViewById(R.id.version)).setText(BuildConfig.VERSION_NAME);
@@ -53,7 +49,7 @@ public class HelpFragment extends BaseMwmFragment implements View.OnClickListene
     if (osmPresentationView != null)
       osmPresentationView.setText(getString(R.string.osm_presentation, dataVersion));
 
-    // These links are intentionally omitted from the About menu.
+    // Remove support, news, rating, and social links from the About menu.
     root.findViewById(R.id.support_us).setVisibility(View.GONE);
     root.findViewById(R.id.news).setVisibility(View.GONE);
     root.findViewById(R.id.rate).setVisibility(View.GONE);
@@ -62,27 +58,13 @@ public class HelpFragment extends BaseMwmFragment implements View.OnClickListene
     root.findViewById(R.id.mastodon).setVisibility(View.GONE);
     root.findViewById(R.id.facebook).setVisibility(View.GONE);
     root.findViewById(R.id.twitter).setVisibility(View.GONE);
+    root.findViewById(R.id.donate).setVisibility(View.GONE);
 
     setupItem(R.id.web, true, root);
     setupItem(R.id.email, true, root);
     setupItem(R.id.github, true, root);
     setupItem(R.id.openstreetmap, true, root);
     setupItem(R.id.report, isLandscape, root);
-
-    DonationView donationView = root.findViewById(R.id.donate);
-    if (TextUtils.isEmpty(mDonateUrl))
-    {
-      donationView.setVisibility(View.GONE);
-      donationView.setOnDonateClickListener(null);
-    }
-    else
-    {
-      donationView.setVisibility(View.VISIBLE);
-      donationView.setOnDonateClickListener(() -> {
-        Utils.openUrl(requireActivity(), mDonateUrl);
-        Framework.nativeDidShowDonationPage();
-      });
-    }
 
     setupItem(R.id.copyright, false, root);
     View termOfUseView = root.findViewById(R.id.term_of_use_link);
