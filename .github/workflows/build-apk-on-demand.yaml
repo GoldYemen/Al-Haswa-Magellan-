@@ -1,0 +1,130 @@
+# ============================================================
+#  Build Full APK (maps bundled) — ON DEMAND ONLY
+# ============================================================
+#  What this does:
+#    Builds a COMPLETE, installable APK that already contains the
+#    world maps + the pre-bundled Yemen map, so it works offline
+#    from the very first launch.
+#
+#  How it runs:
+#    NEVER on its own. It only runs when YOU click it:
+#      GitHub  ->  Actions  ->  "Build Full APK (maps bundled)"
+#              ->  Run workflow
+#
+#  Where the APK goes:
+#    It is saved as a workflow artifact you download and then
+#    upload to Uptodown yourself.
+#    It is NOT attached to any GitHub Release.
+#
+#  Install it at:
+#    .github/workflows/build-apk-on-demand.yaml
+# ============================================================
+
+name: Build Full APK (maps bundled)
+
+on:
+  workflow_dispatch:
+    inputs:
+      flavors:
+        description: 'Which build(s) to make'
+        required: true
+        default: 'google'
+        type: choice
+        options:
+          - google
+          - huawei
+          - google,huawei
+          - web
+      retention_days:
+        description: 'Keep the APK available for N days'
+        required: false
+        default: '30'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: manual-apk-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    # The Gradle wrapper lives in the android/ folder of this repo.
+    defaults:
+      run:
+        working-directory: android
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ----------------------------------------------------------
+      #  Optional: release signing.
+      #  If you already restore the keystore in your existing
+      #  release workflow, COPY THOSE STEPS HERE VERBATIM
+      #  (same secret names, same file paths) and delete the two
+      #  steps below.
+      #  Without it the APK is debug-signed: it installs fine, but
+      #  later store updates must use the exact same key.
+      # ----------------------------------------------------------
+      - name: Restore release keystore (if configured)
+        if: ${{ secrets.RELEASE_KEYSTORE != '' }}
+        working-directory: android
+        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > release.keystore
+
+      - name: Write signing properties (if configured)
+        if: ${{ secrets.SECURE_PROPERTIES != '' }}
+        working-directory: android
+        run: echo "${{ secrets.SECURE_PROPERTIES }}" > secure.properties
+
+      # ----------------------------------------------------------
+      #  Build the APK.
+      #  NOTE: 'assemble...' makes an installable APK.
+      #        'bundle...'  would make an AAB, which Uptodown does
+      #        NOT accept. We deliberately use 'assemble'.
+      # ----------------------------------------------------------
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build Google APK (maps bundled)
+        if: ${{ contains(github.event.inputs.flavors, 'google') }}
+        run: ./gradlew assembleGoogleRelease --stacktrace
+
+      - name: Build Huawei APK (maps bundled)
+        if: ${{ contains(github.event.inputs.flavors, 'huawei') }}
+        run: ./gradlew assembleHuaweiRelease --stacktrace
+
+      - name: Build Web APK
+        if: ${{ github.event.inputs.flavors == 'web' }}
+        run: ./gradlew assembleWebRelease --stacktrace
+
+      - name: Show produced files
+        run: |
+          echo "### Produced APKs" >> $GITHUB_STEP_SUMMARY
+          find app/build/outputs/apk -name '*.apk' -type f \
+            -exec du -h {} \; >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Upload APK as download
+        uses: actions/upload-artifact@v4
+        with:
+          name: alhaswa-apk-${{ github.run_number }}
+          path: android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: ${{ fromJSON(github.event.inputs.retention_days || '30') }}
