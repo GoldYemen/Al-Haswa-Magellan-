@@ -3,8 +3,6 @@
 
 def securityPropertiesFile = rootProject.file('app/secure.properties')
 def securityPropertiesFileExists = securityPropertiesFile.exists() && securityPropertiesFile.length() > 0
-if (securityPropertiesFileExists)
-    apply from: securityPropertiesFile
 
 def signingStoreFile = { String path ->
     def storeFile = new File(path)
@@ -22,23 +20,15 @@ android {
         release {
             if (securityPropertiesFileExists) {
                 println('The release signing keys are available')
-                // Load properties from secure.properties in a robust way (accept multiple key names)
+                // Read secure.properties as a Java properties file; do not evaluate it as Groovy.
                 def props = new Properties()
                 securityPropertiesFile.withInputStream { props.load(it) }
 
                 def findProp = { String... keys ->
-                    // 1) check for variables bound by apply from: secure.properties
-                    for (k in keys) {
-                        if (this.hasProperty(k) && this."${k}" != null && "${this."${k}"}".toString().trim()) {
-                            return "${this."${k}"}".toString().trim()
-                        }
-                    }
-                    // 2) check properties file with exact and case-insensitive keys
                     for (k in keys) {
                         if (props.containsKey(k) && props.getProperty(k).toString().trim()) {
                             return props.getProperty(k).toString().trim()
                         }
-                        // case-insensitive match
                         for (entryKey in props.stringPropertyNames()) {
                             if (entryKey.equalsIgnoreCase(k) && props.getProperty(entryKey).toString().trim()) {
                                 return props.getProperty(entryKey).toString().trim()
