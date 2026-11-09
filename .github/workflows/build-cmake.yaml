@@ -95,7 +95,7 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Fetch submodules manually
         shell: bash
         run: |
