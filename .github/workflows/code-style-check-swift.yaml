@@ -23,7 +23,7 @@ jobs:
           swiftformat --version
 
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Run swiftformat
         run: |
@@ -33,7 +33,7 @@ jobs:
 
       - name: Post swiftformat comments
         if: failure()
-        uses: reviewdog/action-suggester@aa38384ceb608d00f84b4690cacc83a5aba307ff # v1.24.0
+        uses: reviewdog/action-suggester@fd22a83b1ebc13fd8aee5d57b06793fce6f20fb9 # v1.27.1
         with:
           fail_level: error
           tool_name: swiftformat

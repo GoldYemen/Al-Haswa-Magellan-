@@ -95,7 +95,7 @@ jobs:
         if: ${{ runner.os == 'Linux' }}
         run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Fetch submodules manually
         shell: bash
         run: |
@@ -163,7 +163,7 @@ jobs:
         if: ${{ runner.os == 'Windows' }}
         uses: step-security/msvc-dev-cmd@v1
       - name: Configure ccache
-        uses: hendrikmuhs/ccache-action@v1.2.24
+        uses: hendrikmuhs/ccache-action@v1.2.25
         with:
           key: ${{ github.workflow }}-${{ matrix.environment.os }}-${{ matrix.environment.cc }}-${{ matrix.environment.unity }}-${{ matrix.cmake-build-type }}
           # No Unity compiles every TU separately, so its cache needs more room
