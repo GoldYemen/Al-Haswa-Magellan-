@@ -51,7 +51,7 @@ jobs:
           java-version: '21'
 
       - name: Checkout sources
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 100
           submodules: false
@@ -121,7 +121,7 @@ jobs:
           echo "Warning: Could not install NDK 29, will try with available version"
 
       - name: Configure ccache
-        uses: hendrikmuhs/ccache-action@v1.2.24
+        uses: hendrikmuhs/ccache-action@v1.2.25
         with:
           key: ${{ github.workflow }}-google-beta
 
